@@ -1,0 +1,36 @@
+{
+	"name": "MD5",
+	"version": "1.0.0",
+	"keywords": "MD5, Hash, Digest, Cryptography, Security, Message Digest, Arduino, Atmel AVR, Atmel Mega AVR",
+	"description": "MD5 is a simple library for calculating MD5 hash of a string or a file. It is written in C++ and can be used in Arduino and Atmel AVR and Atmel Mega AVR microcontrollers.",
+	"authors":
+	{
+		"name": "Mehmet Gunce Akkoyun",
+		"email": "akkoyun@me.com",
+		"url": "https://github.com/akkoyun"
+	},
+	"license": "MIT",
+	"frameworks": "arduino",
+	"headers": "MD5.h",
+	"platforms":
+	[
+		"atmelavr",
+		"atmelmegaavr"
+	],
+	"repository":
+	{
+		"type": "git",
+		"url": "https://github.com/akkoyun/MD5.git"
+	},
+	"examples": [
+		{
+			"name": "Hash",
+			"base": "examples/Hash",
+			"files": [
+				"Hash.ino"
+			]
+		}
+	]
+}
+
+
