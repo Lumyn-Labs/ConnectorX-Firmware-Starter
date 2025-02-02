@@ -35,8 +35,10 @@ class NetworkingService {
   void transmit(Transmission::Transmission*);
 
  private:
-  static void initImpl(void* _this);
-  void task(void);
+  static void txImpl(void* _this);
+  static void rxImpl(void* _this);
+  void txTask(void);
+  void rxTask(void);
 
   void handleTransmissionCb(Transmission::Transmission*);
   void handleTransmission(Transmission::Transmission*);
@@ -52,7 +54,8 @@ class NetworkingService {
   uint16_t _queueSize;
   TickType_t _queueTimeout;
 
-  TaskHandle_t _task;
+  TaskHandle_t _txTask;
+  TaskHandle_t _rxTask;
   QueueHandle_t _outboundQueue;
   QueueHandle_t _inboundQueue;
   QueueHandle_t _evtQueue;

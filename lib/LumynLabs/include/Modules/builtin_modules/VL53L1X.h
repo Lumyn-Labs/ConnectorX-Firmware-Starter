@@ -6,7 +6,7 @@
 #include "Logger/Logger.h"
 #include "Modules/BaseModule.h"
 
-struct VL53L1XPayload_t {
+struct __attribute__((packed)) VL53L1XPayload_t {
   uint8_t valid;
   uint16_t dist;
 };

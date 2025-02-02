@@ -1,16 +1,16 @@
 {
   "name": "LumynLabs",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "dependencies": {
-    "marcmerlin/FastLED NeoMatrix": "^1.2",
-    "adafruit/Adafruit GFX Library": "^1.11.9",
-    "adafruit/Adafruit BusIO": "^1.16.1",
-    "marcmerlin/Framebuffer GFX": "^1.1",
-    "bblanchon/ArduinoJson": "^7.0.4",
-    "densaugeo/base64": "^1.4.0",
-    "pololu/VL53L1X": "^1.3.1",
-    "bakercp/PacketSerial": "^1.4.0",
-    "adafruit/Adafruit TinyUSB Library": "^2.3.2",
+    "marcmerlin/FastLED NeoMatrix": "1.2",
+    "adafruit/Adafruit GFX Library": "1.11.9",
+    "adafruit/Adafruit BusIO": "1.16.1",
+    "marcmerlin/Framebuffer GFX": "1.1",
+    "bblanchon/ArduinoJson": "7.0.4",
+    "densaugeo/base64": "1.4.0",
+    "pololu/VL53L1X": "1.3.1",
+    "bakercp/PacketSerial": "1.4.0",
+    "adafruit/Adafruit TinyUSB Library": "2.3.2",
     "FreeRTOS": "*",
     "SPI": "*",
     "Wire": "*",
@@ -19,8 +19,7 @@
     "Adafruit_SSD1306": "*",
     "EEPROM": "*",
     "LittleFS": "*",
-    "SDFS": "*",
-    "SdFat": "*"
+    "SDFS": "*"
   },
   "build": {
       "libArchive": true,
