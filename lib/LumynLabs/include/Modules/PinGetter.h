@@ -2,4 +2,4 @@
 
 #include <string>
 
-static uint8_t GetNamedPin(const std::string& pin);
+uint8_t GetNamedPin(const std::string& pin);

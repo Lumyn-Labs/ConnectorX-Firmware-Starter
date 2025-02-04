@@ -43,6 +43,8 @@ class BaseModule : public IModule {
   arduino::HardwareSPI& SpiInstance = SPI1;
   SerialUART& UartInstance = Serial2;
 
+  static constexpr uint8_t kMaxPayloadLen = 16;
+
  private:
   // This callback gets passed to attachInterruptParams along with the event
   // queue as the param argument
