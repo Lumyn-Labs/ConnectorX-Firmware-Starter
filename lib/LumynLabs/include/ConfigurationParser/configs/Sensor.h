@@ -7,8 +7,9 @@
 #include <string>
 #include <string_view>
 
+#include "definitions/domain/module/ModuleInfo.h"
+
 namespace Configuration {
-enum class SensorConnectionType { I2C = 0, SPI, UART, DIO, AIO };
 
 struct Sensor {
   std::string id;

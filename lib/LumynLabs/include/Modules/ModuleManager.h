@@ -15,6 +15,7 @@
 #include "ConfigurationParser/configs/Sensor.h"
 #include "Eventing/EventingService.h"
 #include "IModule.h"
+#include "definitions/domain/response/Response.h"
 
 namespace Modules {
 class ModuleManager {
@@ -30,6 +31,8 @@ class ModuleManager {
   void registerModuleType(std::string typeIdentifier, ModuleCtor ctor) {
     _factories.insert({typeIdentifier, ctor});
   }
+  // TODO: Don't return an external domain object; rather, map it in the handler
+  std::vector<Response::ResponseModuleListEntity> getActiveModules(void);
 
  private:
   struct ModuleContext {
@@ -56,3 +59,4 @@ class ModuleManager {
 };  // namespace Modules
 
 extern SemaphoreHandle_t Wire1Mtx;
+extern Modules::ModuleManager ModuleService;

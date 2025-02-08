@@ -6,6 +6,7 @@
 
 #include "LedService/LEDService.h"
 #include "SystemService/SystemService.h"
+#include "Modules/ModuleManager.h"
 #include "definitions/domain/request/Request.h"
 #include "definitions/domain/response/Response.h"
 
@@ -25,4 +26,7 @@ class RequestHandler {
  private:
   LEDService& _ledService = LedService;
   SystemService& _systemService = SystemManagerService;
+#if CX_BOARD_FEATURES_ENABLE_DEVICES
+  Modules::ModuleManager& _moduleService = ModuleService;
+#endif
 };

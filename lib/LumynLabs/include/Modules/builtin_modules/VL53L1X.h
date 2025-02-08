@@ -32,7 +32,8 @@ class VL53L1XModule : public BaseModule {
     }
 
     if (config().customConfig) {
-      if (config().customConfig->containsKey("distanceMode")) {
+      if (config().customConfig->containsKey("distanceMode") &&
+          (*config().customConfig)["distanceMode"]) {
         String mode = (*config().customConfig)["distanceMode"].as<String>();
         if (mode == "Long") {
           _distanceMode = VL53L1X::Long;
@@ -40,11 +41,13 @@ class VL53L1XModule : public BaseModule {
           _distanceMode = VL53L1X::Short;
         }
       }
-      if (config().customConfig->containsKey("timingBudget")) {
+      if (config().customConfig->containsKey("timingBudget") &&
+          (*config().customConfig)["timingBudget"]) {
         _measurementTimingBudget =
             (*config().customConfig)["timingBudget"].as<uint32_t>();
       }
-      if (config().customConfig->containsKey("continuousPeriod")) {
+      if (config().customConfig->containsKey("continuousPeriod") &&
+          (*config().customConfig)["continuousPeriod"]) {
         _continuousPeriod =
             (*config().customConfig)["continuousPeriod"].as<uint32_t>();
       } else {

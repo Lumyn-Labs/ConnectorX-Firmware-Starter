@@ -21,11 +21,14 @@ class AnalogInputModule : public BaseModule {
     }
 
     if (config.customConfig) {
-      if (config.customConfig->containsKey("scaleFactor")) {
+      if (config.customConfig->containsKey("scaleFactor") &&
+          (*config.customConfig)["scaleFactor"]) {
         _scaleFactor = (*config.customConfig)["scaleFactor"].as<float>();
       }
       if (config.customConfig->containsKey("outputMin") &&
-          config.customConfig->containsKey("outputMax")) {
+          (*config.customConfig)["outputMin"] &&
+          config.customConfig->containsKey("outputMax") &&
+          (*config.customConfig)["outputMax"]) {
         _outputMin = (*config.customConfig)["outputMin"].as<int32_t>();
         _outputMax = (*config.customConfig)["outputMax"].as<int32_t>();
         _enableMapping = true;

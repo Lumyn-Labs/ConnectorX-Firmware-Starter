@@ -23,7 +23,8 @@ class DigitalInputModule : public BaseModule {
 
   ModuleError_t initSensor(void) override {
     if (config().customConfig &&
-        config().customConfig->containsKey("interruptMode")) {
+        config().customConfig->containsKey("interruptMode") &&
+        (*config().customConfig)["interruptMode"]) {
       String interruptModeStr =
           (*config().customConfig)["interruptMode"].as<String>();
 
