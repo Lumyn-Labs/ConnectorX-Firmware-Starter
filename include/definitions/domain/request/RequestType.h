@@ -17,6 +17,7 @@ enum class RequestType : uint8_t {
   LEDZoneStatus,
   LatestEvent,
   EventFlags,
+  ModuleList,
 };
 
 enum class HostConnectionSource : uint8_t {

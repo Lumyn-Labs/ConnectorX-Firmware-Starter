@@ -28,6 +28,7 @@ struct __attribute__((packed)) RequestLEDZoneStatusInfo {
 };
 struct __attribute__((packed)) RequestLatestEventInfo {};
 struct __attribute__((packed)) RequestEventFlagsInfo {};
+struct __attribute__((packed)) RequestModuleListInfo {};
 
 struct __attribute__((packed)) Request {
   RequestType type;
@@ -47,6 +48,7 @@ struct __attribute__((packed)) Request {
     RequestLEDZoneStatusInfo ledZoneStatus;
     RequestLatestEventInfo latestEvent;
     RequestEventFlagsInfo eventFlags;
+    RequestModuleListInfo moduleList;
   };
 };
 }  // namespace Request

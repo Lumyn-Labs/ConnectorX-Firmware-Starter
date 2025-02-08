@@ -4,6 +4,7 @@
 
 #include "SystemService/Status.h"
 #include "definitions/domain/event/Event.h"
+#include "definitions/domain/module/ModuleInfo.h"
 #include "definitions/domain/request/RequestType.h"
 
 namespace Response {
@@ -56,6 +57,19 @@ struct __attribute__((packed)) ResponseEventFlagsInfo {
   uint32_t eventFlags;
 };
 
+struct __attribute__((packed)) ResponseModuleListEntity {
+  uint16_t moduleId;
+  char name[32];
+  char type[24];
+  uint16_t pollingRateMs;
+  SensorConnectionType connectionType;
+};
+
+struct __attribute__((packed)) ResponseModuleListInfo {
+  uint16_t count;
+  ResponseModuleListEntity modules[8];
+};
+
 struct __attribute__((packed)) Response {
   Request::RequestType type;
   // Should match the incoming Request's ID
@@ -74,8 +88,10 @@ struct __attribute__((packed)) Response {
     ResponseLEDZoneStatusInfo ledZoneStatus;
     ResponseLatestEventInfo latestEvent;
     ResponseEventFlagsInfo eventFlags;
+    ResponseModuleListInfo moduleList;
   };
 };
 
-constexpr auto sz = sizeof(Response);
+constexpr auto size = sizeof(ResponseModuleListInfo);
+
 }  // namespace Response
