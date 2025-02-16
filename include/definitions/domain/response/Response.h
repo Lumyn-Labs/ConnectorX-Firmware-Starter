@@ -24,12 +24,19 @@ struct __attribute__((packed)) ResponseAssignedIdInfo {
   uint8_t valid;
   char id[24];
 };
+struct __attribute__((packed)) ResponseVersionInfo {
+  uint8_t major;
+  uint8_t minor;
+  uint8_t patch;
+};
 struct __attribute__((packed)) ResponseHandshakeInfo {
   ResponseStatusInfo status;
   ResponseProductSKUInfo sku;
   ResponseProductSerialNumberInfo serNumber;
   ResponseConfigHashInfo configHash;
   ResponseAssignedIdInfo assignedId;
+  ResponseVersionInfo version;
+
 };
 struct __attribute__((packed)) ResponseFaultsInfo {
   uint32_t faultFlags;
@@ -59,7 +66,7 @@ struct __attribute__((packed)) ResponseEventFlagsInfo {
 
 struct __attribute__((packed)) ResponseModuleListEntity {
   uint16_t moduleId;
-  char name[32];
+  char name[24];
   char type[24];
   uint16_t pollingRateMs;
   SensorConnectionType connectionType;
@@ -92,6 +99,6 @@ struct __attribute__((packed)) Response {
   };
 };
 
-constexpr auto size = sizeof(ResponseModuleListInfo);
+constexpr auto size = sizeof(Response);
 
 }  // namespace Response
