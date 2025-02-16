@@ -12,12 +12,17 @@
 #include "LedService/LEDService.h"
 #include "Modules/ModuleManager.h"
 #include "Status.h"
+#include "SystemService/SystemContext.h"
 #include "definitions/domain/command/system/SystemCommand.h"
 #include "definitions/domain/event/Event.h"
 #include "definitions/domain/request/RequestType.h"
 
 #define bi_program_name(CX_BOARD_INFO_NAME)
 #define bi_program_version_string(CX_BOARD_INFO_VERSION)
+
+#define PROGRAM_VERSION_MAJOR 2
+#define PROGRAM_VERSION_MINOR 1
+#define PROGRAM_VERSION_PATCH 0
 
 class SystemService {
  public:
@@ -37,15 +42,17 @@ class SystemService {
 
   Eventing::Status getStatus(void) const;
 
-  inline uint32_t getErrorFlags() const { return _ctx.errorFlags.errors; }
+  inline uint32_t getErrorFlags() const {
+    return SystemContext.errorFlags.errors;
+  }
   void clearErrorFlag(uint32_t bitmask);
   const Configuration::CXv3Configuration& config(void) const {
     return *_config;
   }
 
   inline const std::optional<const char*> getAssignedId() const {
-    if (_ctx.settingsValid) {
-      return _ctx.assignedId.c_str();
+    if (SystemContext.settingsValid) {
+      return SystemContext.assignedId.c_str();
     }
 
     return std::nullopt;
@@ -62,16 +69,6 @@ class SystemService {
   }
 
  private:
-  struct RuntimeContext {
-    Request::HostConnectionSource connSource;
-    Eventing::Status status;
-    Eventing::ErrorFlags errorFlags;
-    bool connected;
-    bool settingsValid;
-    std::string assignedId;
-    uint32_t lastHeartbeatTs;
-  };
-
   union LongLongBytes {
     uint8_t bytes[8];
     uint64_t val;
@@ -97,7 +94,6 @@ class SystemService {
   QueueHandle_t _cmdQueue;
   TickType_t _queueTimeout;
   TaskHandle_t _task;
-  RuntimeContext _ctx;
   std::unique_ptr<Configuration::CXv3Configuration> _config;
 };
 
