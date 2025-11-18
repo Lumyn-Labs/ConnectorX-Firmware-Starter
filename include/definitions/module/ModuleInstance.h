@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-#include "ConfigurationParser/configs/Sensor.h"
+#include "ConfigurationParser/configs/Module.h"
 #include "Modules/ModuleManager.h"
 
 struct ModuleInstance {

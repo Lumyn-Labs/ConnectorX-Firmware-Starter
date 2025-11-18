@@ -33,6 +33,8 @@ extern "C" {
 // COMMON CONFIGURATION
 //--------------------------------------------------------------------
 
+#define CFG_TUSB_RHPORT0_MODE OPT_MODE_DEVICE
+
 #ifdef USE_TINYUSB_HOST
 // native as host
 #define CFG_TUD_ENABLED 0
@@ -138,8 +140,8 @@ extern "C" {
 // Set Line Coding on enumeration/mounted, value for cdc_line_coding_t
 // bit rate = 115200, 1 stop bit, no parity, 8 bit data width
 // This need Pico-PIO-USB at least 0.5.1
-#define CFG_TUH_CDC_LINE_CODING_ON_ENUM                                        \
-  { 115200, CDC_LINE_CODING_STOP_BITS_1, CDC_LINE_CODING_PARITY_NONE, 8 }
+#define CFG_TUH_CDC_LINE_CODING_ON_ENUM \
+  {115200, CDC_LINE_CODING_STOP_BITS_1, CDC_LINE_CODING_PARITY_NONE, 8}
 
 #ifdef __cplusplus
 }
