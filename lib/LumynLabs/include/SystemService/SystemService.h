@@ -13,14 +13,14 @@
 #include "Modules/ModuleManager.h"
 #include "Status.h"
 #include "SystemService/SystemContext.h"
-#include "definitions/domain/command/system/SystemCommand.h"
-#include "definitions/domain/event/Event.h"
-#include "definitions/domain/request/RequestType.h"
+#include "lumyn/domain/command/system/SystemCommand.h"
+#include "lumyn/domain/event/Event.h"
+#include "lumyn/domain/request/RequestType.h"
 
 #define bi_program_name(CX_BOARD_INFO_NAME)
 #define bi_program_version_string(CX_BOARD_INFO_VERSION)
 
-#define PROGRAM_VERSION_MAJOR 2
+#define PROGRAM_VERSION_MAJOR 3
 #define PROGRAM_VERSION_MINOR 1
 #define PROGRAM_VERSION_PATCH 1
 
@@ -35,7 +35,7 @@ class SystemService {
 
   void sendCommand(Command::System::SystemCommand*);
 
-#if CX_BOARD_FEATURES_ENABLE_DEVICES
+#if CX_BOARD_FEATURES_ENABLE_MODULES
   void registerModuleType(std::string typeIdentifier,
                           Modules::ModuleManager::ModuleCtor ctor);
 #endif
@@ -87,11 +87,13 @@ class SystemService {
   void handleCommand(Command::System::SystemCommand*);
   void handleEvent(Eventing::Event*);
   void setStatusLed(void);
+  void rebootDevice(Command::System::RestartDeviceData data);
 
   LEDService& _ledService = LedService;
   EventingService& _eventService = EventService;
   QueueHandle_t _eventQueue;
   QueueHandle_t _cmdQueue;
+  QueueSetHandle_t _queueSet;
   TickType_t _queueTimeout;
   TaskHandle_t _task;
   std::unique_ptr<Configuration::CXv3Configuration> _config;

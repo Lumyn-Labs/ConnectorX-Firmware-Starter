@@ -9,114 +9,115 @@
 namespace Modules {
 namespace Builtin {
 
-class DigitalInputModule : public BaseModule {
+struct __attribute__((packed)) DigitalInputPayload_t {
+  uint8_t state;
+};
+
+class DigitalInputModule : public BaseModule<DigitalInputPayload_t> {
  public:
-  DigitalInputModule(const Configuration::Sensor& config) : BaseModule(config) {
-    if (config.customConfig && config.customConfig->containsKey("pin")) {
-      String pinName = (*config.customConfig)["pin"].as<String>();
-      _pin = GetNamedPin(pinName.c_str());
-    } else {
-      SerialLogger.error("DigitalInputModule: Missing 'pin' in customConfig");
-      _pin = 255;
-    }
+  DigitalInputModule(const Configuration::Module& config) : BaseModule(config) {
+    parseConfig();
   }
 
-  ModuleError_t initSensor(void) override {
-    if (config().customConfig &&
-        config().customConfig->containsKey("interruptMode") &&
-        (*config().customConfig)["interruptMode"]) {
-      String interruptModeStr =
-          (*config().customConfig)["interruptMode"].as<String>();
-
-      auto interruptMode = parseInterruptMode(interruptModeStr);
-      if (!interruptMode) {
-        return {.errorType = ModuleErrorType_t::InvalidConfiguration,
-                .additionalInformation = {1, 0, 0, 0}};
-      } else {
-        _interruptMode = *interruptMode;
-        _interruptEnabled = true;
-        attachDigitalInterrupt(_pin, _interruptMode, [this]() {
-          _pinChanged = true;
-          _lastPinState = digitalReadFast(_pin);
-        });
-      }
-    }
-
+ protected:
+  ModuleError_t initModule() override {
     if (_pin == 255) {
+      SerialLogger.error("DigitalInputModule: Invalid pin");
       return {
           .errorType = ModuleErrorType_t::InitError,
           .additionalInformation = {_pin, 0, 0, 0},
       };
     }
 
+    // TODO: Allow for different pin modes
     pinMode(_pin, INPUT);
-    SerialLogger.verbose("DigitalInputModule: Created with pin %u and mode %u",
-                         _pin, _interruptMode);
 
     return {
         .errorType = ModuleErrorType_t::None,
+        .additionalInformation = {0, 0, 0, 0},
     };
   }
 
-  std::optional<Eventing::Event> handleSubscribedEvent(
-      const Eventing::Event& evt) override {
-    SerialLogger.verbose("DigitalInputModule: Received event type %lu",
-                         evt.type);
-    return std::nullopt;
-  }
-
-  uint8_t poll(uint8_t* buf, ModuleError_t* err) override {
-    DigitalInputPayload_t payload;
+  ModuleError_t readData(DigitalInputPayload_t* dataOut) override {
+    if (!dataOut) {
+      return {
+          .errorType = ModuleErrorType_t::ReadError,
+          .additionalInformation = {0xFF, 0, 0, 0},
+      };
+    }
 
     if (_interruptEnabled) {
       if (_pinChanged) {
-        payload.state = _lastPinState;
+        dataOut->state = _lastPinState;
         _pinChanged = false;
         SerialLogger.verbose("DigitalInputModule: Pin %u changed to %d", _pin,
-                             payload.state);
+                             dataOut->state);
       } else {
-        payload.state = 0;
+        dataOut->state = 0;
       }
     } else {
-      payload.state = digitalRead(_pin);
+      dataOut->state = digitalRead(_pin);
       SerialLogger.verbose("DigitalInputModule: Pin %u state is %u", _pin,
-                           payload.state);
+                           dataOut->state);
     }
 
-    memcpy(buf, &payload, sizeof(payload));
-
-    return sizeof(payload);
+    return {
+        .errorType = ModuleErrorType_t::None,
+        .additionalInformation = {0, 0, 0, 0},
+    };
   }
 
  private:
-  struct __attribute__((packed)) DigitalInputPayload_t {
-    uint8_t state;
-  };
+  void parseConfig() {
+    _pin = 255;
+    _interruptEnabled = false;
+    _interruptMode = PinStatus::CHANGE;
+    _pinChanged = false;
+    _lastPinState = 0;
 
-  volatile bool _pinChanged = false;
-  volatile uint8_t _lastPinState = 0;
-  bool _interruptEnabled = false;
+    if (!config().customConfig) {
+      SerialLogger.error("DigitalInputModule: Missing customConfig");
+      return;
+    }
 
-  std::optional<PinStatus> parseInterruptMode(const String& str) {
-    if (str == "LOW") {
-      return PinStatus::LOW;
-    } else if (str == "HIGH") {
-      return PinStatus::HIGH;
-    } else if (str == "CHANGE") {
-      return PinStatus::CHANGE;
-    } else if (str == "FALLING") {
-      return PinStatus::FALLING;
-    } else if (str == "RISING") {
-      return PinStatus::RISING;
-    } else {
-      SerialLogger.error("DigitalInputModule: Unknown interruptMode '%s'",
-                         str.c_str());
-      return std::nullopt;
+    auto& cfg = *config().customConfig;
+
+    if (cfg.containsKey("pin") && cfg["pin"]) {
+      String pinName = cfg["pin"].as<String>();
+      _pin = GetNamedPin(pinName.c_str());
+      SerialLogger.verbose("DigitalInputModule: pin='%s' (%d)", pinName.c_str(),
+                           _pin);
+    }
+
+    if (cfg.containsKey("interruptMode") && cfg["interruptMode"]) {
+      String interruptModeStr = cfg["interruptMode"].as<String>();
+      auto mode = parseInterruptMode(interruptModeStr);
+      if (mode.has_value()) {
+        _interruptMode = mode.value();
+        _interruptEnabled = true;
+        SerialLogger.verbose("DigitalInputModule: interruptMode='%s'",
+                             interruptModeStr.c_str());
+      } else {
+        SerialLogger.error("DigitalInputModule: Invalid interruptMode '%s'",
+                           interruptModeStr.c_str());
+      }
     }
   }
 
+  std::optional<PinStatus> parseInterruptMode(const String& str) {
+    if (str == "LOW") return PinStatus::LOW;
+    if (str == "HIGH") return PinStatus::HIGH;
+    if (str == "CHANGE") return PinStatus::CHANGE;
+    if (str == "FALLING") return PinStatus::FALLING;
+    if (str == "RISING") return PinStatus::RISING;
+    return std::nullopt;
+  }
+
   uint8_t _pin;
+  bool _interruptEnabled;
   PinStatus _interruptMode;
+  volatile bool _pinChanged;
+  volatile uint8_t _lastPinState;
 };
 
 }  // namespace Builtin

@@ -6,8 +6,8 @@
 #include <map>
 #include <optional>
 
-#include "IDCreator/IDCreator.h"
 #include "definitions/led/AnimationSequenceInstance.h"
+#include "lumyn/util/hashing/IDCreator.h"
 
 class AnimationSequenceManager {
  public:

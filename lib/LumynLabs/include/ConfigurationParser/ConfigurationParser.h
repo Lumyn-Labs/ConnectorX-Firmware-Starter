@@ -9,9 +9,10 @@
 #include <optional>
 #include <string_view>
 
+#include "Configuration.h"
 #include "ConfigurationParser/ConfigurationValidator.h"
 #include "ParseResult.h"
-#include "Configuration.h"
+#include "lumyn/domain/module/ModuleInfo.h"
 
 class ConfigurationParser {
  public:
@@ -55,9 +56,9 @@ class ConfigurationParser {
 
   void bitmapToConfig(JsonObjectConst obj, Configuration::Bitmap* bitmap) const;
 
-  std::vector<Configuration::Sensor> sensorsToConfig(JsonArrayConst arr) const;
+  std::vector<Configuration::Module> modulesToConfig(JsonArrayConst arr) const;
 
-  void sensorToConfig(JsonObjectConst obj, Configuration::Sensor* sensor) const;
+  void moduleToConfig(JsonObjectConst obj, Configuration::Module* module) const;
 
   std::vector<Configuration::AnimationGroup> animationGroupsToConfig(
       JsonArrayConst arr) const;

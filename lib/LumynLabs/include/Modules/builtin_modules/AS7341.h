@@ -8,126 +8,142 @@
 namespace Modules {
 namespace Builtin {
 
-class AS7341Module : public BaseModule {
- public:
-  AS7341Module(const Configuration::Sensor& config) : BaseModule(config) {}
+struct __attribute__((packed)) AS7341Payload_t {
+  uint8_t useRGBW;
+  union {
+    struct {
+      uint16_t channelF1;
+      uint16_t channelF2;
+      uint16_t channelF3;
+      uint16_t channelF4;
+      uint16_t channelF5;
+      uint16_t channelF6;
+      uint16_t channelF7;
+      uint16_t channelF8;
+    } raw;
+    struct {
+      uint16_t red;
+      uint16_t green;
+      uint16_t blue;
+      uint16_t white;
+    } rgbw;
+  } data;
+};
 
-  ModuleError_t initSensor(void) override {
+class AS7341Module : public BaseModule<AS7341Payload_t> {
+ public:
+  AS7341Module(const Configuration::Module& config) : BaseModule(config) {
+    parseConfig();
+  }
+
+ protected:
+  ModuleError_t initModule() override {
     if (!_sensor.begin()) {
-      SerialLogger.error("AS7341Module: Sensor initialization failed!");
+      SerialLogger.error("AS7341Module: Sensor initialization failed");
       return {
           .errorType = ModuleErrorType_t::InitError,
           .additionalInformation = {1, 0, 0, 0},
       };
     }
 
-    if (_config.customConfig) {
-      if (_config.customConfig->containsKey("gain")) {
-        _gain = (*_config.customConfig)["gain"].as<uint8_t>();
-        _sensor.setGain(static_cast<as7341_gain_t>(_gain));
-        SerialLogger.verbose("AS7341Module: Gain set to %d", _gain);
-      }
-      if (_config.customConfig->containsKey("atime")) {
-        _atime = (*_config.customConfig)["atime"].as<uint8_t>();
-        _sensor.setATIME(_atime);
-        SerialLogger.verbose("AS7341Module: ATIME set to %d", _atime);
-      }
-      if (_config.customConfig->containsKey("astep")) {
-        _astep = (*_config.customConfig)["astep"].as<uint16_t>();
-        _sensor.setASTEP(_astep);
-        SerialLogger.verbose("AS7341Module: ASTEP set to %d", _astep);
-      }
-      if (_config.customConfig->containsKey("rgbwConversion")) {
-        _rgbwConversion = (*_config.customConfig)["rgbwConversion"].as<bool>();
-        SerialLogger.verbose("AS7341Module: RGBW conversion is %s",
-                             _rgbwConversion ? "enabled" : "disabled");
-      }
+    _sensor.setGain(static_cast<as7341_gain_t>(_gain));
+    _sensor.setATIME(_atime);
+    _sensor.setASTEP(_astep);
+
+    SerialLogger.info(
+        "AS7341Module: Configured - Gain:%d, ATIME:%d, ASTEP:%d, RGBW:%s",
+        _gain, _atime, _astep, _useRGBW ? "enabled" : "disabled");
+
+    return {
+        .errorType = ModuleErrorType_t::None,
+        .additionalInformation = {0, 0, 0, 0},
+    };
+  }
+
+  ModuleError_t readData(AS7341Payload_t* dataOut) override {
+    if (!dataOut) {
+      return {
+          .errorType = ModuleErrorType_t::ReadError,
+          .additionalInformation = {0xFF, 0, 0, 0},
+      };
+    }
+
+    if (!_sensor.readAllChannels()) {
+      SerialLogger.error("AS7341Module: Error reading channels");
+      return {
+          .errorType = ModuleErrorType_t::Timeout,
+          .additionalInformation = {2, 0, 0, 0},
+      };
+    }
+
+    dataOut->useRGBW = _useRGBW;
+
+    if (_useRGBW) {
+      readRGBW(dataOut);
+    } else {
+      readRaw(dataOut);
     }
 
     return {
         .errorType = ModuleErrorType_t::None,
+        .additionalInformation = {0, 0, 0, 0},
     };
   }
 
-  std::optional<Eventing::Event> handleSubscribedEvent(
-      const Eventing::Event& evt) override {
-    SerialLogger.verbose("AS7341Module: Received event type %d", evt.type);
-    // TODO: Handle events(?)
-    return std::nullopt;
-  }
-
-  uint8_t poll(uint8_t* buf, ModuleError_t* err) override {
-    if (!_sensor.readAllChannels()) {
-      SerialLogger.error("AS7341Module: Error reading all channels!");
-      *err = {
-          .errorType = ModuleErrorType_t::Timeout,
-          .additionalInformation = {2, 0, 0, 0},
-      };
-      return 0;
-    }
-
-    if (_rgbwConversion) {
-      return pollRGBW(buf);
-    } else {
-      return pollRaw(buf);
-    }
-  }
-
  private:
-  union AS7341Payload_t {
-    struct {
-      uint16_t channelF1;  // 415nm
-      uint16_t channelF2;  // 445nm
-      uint16_t channelF3;  // 480nm
-      uint16_t channelF4;  // 515nm
-      uint16_t channelF5;  // 555nm
-      uint16_t channelF6;  // 590nm
-      uint16_t channelF7;  // 630nm
-      uint16_t channelF8;  // 680nm
-    } rawData;
-    struct {
-      uint16_t red;
-      uint16_t green;
-      uint16_t blue;
-      uint16_t white;
-    } rgbwData;
-  };
+  void parseConfig() {
+    _gain = 0;
+    _atime = 100;
+    _astep = 999;
+    _useRGBW = false;
 
-  /**
-   * Poll the sensor and convert the results to RGBW.
-   * Writes the payload into the provided buffer and returns the payload size.
-   */
-  uint8_t pollRGBW(uint8_t* buf) {
-    AS7341Payload_t payload_rgbw;
-    convertToRGBW(payload_rgbw);
-    memcpy(buf, &payload_rgbw, sizeof(payload_rgbw));
-    return sizeof(payload_rgbw);
+    if (!config().customConfig) {
+      return;
+    }
+
+    auto& cfg = *config().customConfig;
+
+    if (cfg.containsKey("gain") && cfg["gain"]) {
+      _gain = cfg["gain"].as<uint8_t>();
+      SerialLogger.verbose("AS7341Module: gain=%d", _gain);
+    }
+
+    if (cfg.containsKey("atime") && cfg["atime"]) {
+      _atime = cfg["atime"].as<uint8_t>();
+      SerialLogger.verbose("AS7341Module: atime=%d", _atime);
+    }
+
+    if (cfg.containsKey("astep") && cfg["astep"]) {
+      _astep = cfg["astep"].as<uint16_t>();
+      SerialLogger.verbose("AS7341Module: astep=%d", _astep);
+    }
+
+    if (cfg.containsKey("useRGBW") && cfg["useRGBW"]) {
+      _useRGBW = cfg["useRGBW"].as<bool>();
+      SerialLogger.verbose("AS7341Module: useRGBW=%s",
+                           _useRGBW ? "true" : "false");
+    }
   }
 
-  /**
-   * Poll the sensor and return the raw channel data.
-   * Writes the payload into the provided buffer and returns the payload size.
-   */
-  uint8_t pollRaw(uint8_t* buf) {
-    AS7341Payload_t payload_raw;
-    payload_raw.rawData.channelF1 = _sensor.getChannel(AS7341_CHANNEL_415nm_F1);
-    payload_raw.rawData.channelF2 = _sensor.getChannel(AS7341_CHANNEL_445nm_F2);
-    payload_raw.rawData.channelF3 = _sensor.getChannel(AS7341_CHANNEL_480nm_F3);
-    payload_raw.rawData.channelF4 = _sensor.getChannel(AS7341_CHANNEL_515nm_F4);
-    payload_raw.rawData.channelF5 = _sensor.getChannel(AS7341_CHANNEL_555nm_F5);
-    payload_raw.rawData.channelF6 = _sensor.getChannel(AS7341_CHANNEL_590nm_F6);
-    payload_raw.rawData.channelF7 = _sensor.getChannel(AS7341_CHANNEL_630nm_F7);
-    payload_raw.rawData.channelF8 = _sensor.getChannel(AS7341_CHANNEL_680nm_F8);
-    memcpy(buf, &payload_raw, sizeof(payload_raw));
-    return sizeof(payload_raw);
+  void readRaw(AS7341Payload_t* dataOut) {
+    dataOut->data.raw.channelF1 = _sensor.getChannel(AS7341_CHANNEL_415nm_F1);
+    dataOut->data.raw.channelF2 = _sensor.getChannel(AS7341_CHANNEL_445nm_F2);
+    dataOut->data.raw.channelF3 = _sensor.getChannel(AS7341_CHANNEL_480nm_F3);
+    dataOut->data.raw.channelF4 = _sensor.getChannel(AS7341_CHANNEL_515nm_F4);
+    dataOut->data.raw.channelF5 = _sensor.getChannel(AS7341_CHANNEL_555nm_F5);
+    dataOut->data.raw.channelF6 = _sensor.getChannel(AS7341_CHANNEL_590nm_F6);
+    dataOut->data.raw.channelF7 = _sensor.getChannel(AS7341_CHANNEL_630nm_F7);
+    dataOut->data.raw.channelF8 = _sensor.getChannel(AS7341_CHANNEL_680nm_F8);
+
+    SerialLogger.verbose(
+        "AS7341Module: Raw - F1:%u F2:%u F3:%u F4:%u F5:%u F6:%u F7:%u F8:%u",
+        dataOut->data.raw.channelF1, dataOut->data.raw.channelF2,
+        dataOut->data.raw.channelF3, dataOut->data.raw.channelF4,
+        dataOut->data.raw.channelF5, dataOut->data.raw.channelF6,
+        dataOut->data.raw.channelF7, dataOut->data.raw.channelF8);
   }
 
-  // Convert raw sensor data to RGBW data
-  // - red: uses 555nm (F5)
-  // - green: uses 590nm (F6)
-  // - blue: uses 480nm (F3)
-  // - white: average of channels F1, F2, F4, and F7
-  void convertToRGBW(AS7341Payload_t& payload) {
+  void readRGBW(AS7341Payload_t* dataOut) {
     uint16_t chF1 = _sensor.getChannel(AS7341_CHANNEL_415nm_F1);
     uint16_t chF2 = _sensor.getChannel(AS7341_CHANNEL_445nm_F2);
     uint16_t chF3 = _sensor.getChannel(AS7341_CHANNEL_480nm_F3);
@@ -135,24 +151,22 @@ class AS7341Module : public BaseModule {
     uint16_t chF5 = _sensor.getChannel(AS7341_CHANNEL_555nm_F5);
     uint16_t chF6 = _sensor.getChannel(AS7341_CHANNEL_590nm_F6);
     uint16_t chF7 = _sensor.getChannel(AS7341_CHANNEL_630nm_F7);
-    uint16_t chF8 = _sensor.getChannel(AS7341_CHANNEL_680nm_F8);
 
-    payload.rgbwData.red = chF5;
-    payload.rgbwData.green = chF6;
-    payload.rgbwData.blue = chF3;
-    payload.rgbwData.white = (chF1 + chF2 + chF4 + chF7) / 4;
+    dataOut->data.rgbw.red = chF5;
+    dataOut->data.rgbw.green = chF6;
+    dataOut->data.rgbw.blue = chF3;
+    dataOut->data.rgbw.white = (chF1 + chF2 + chF4 + chF7) / 4;
 
-    SerialLogger.verbose(
-        "AS7341Module: RGBW Conversion - R: %d, G: %d, B: %d, W: %d",
-        payload.rgbwData.red, payload.rgbwData.green, payload.rgbwData.blue,
-        payload.rgbwData.white);
+    SerialLogger.verbose("AS7341Module: RGBW - R:%u G:%u B:%u W:%u",
+                         dataOut->data.rgbw.red, dataOut->data.rgbw.green,
+                         dataOut->data.rgbw.blue, dataOut->data.rgbw.white);
   }
 
   Adafruit_AS7341 _sensor;
-  uint8_t _gain = 0;      // Default gain
-  uint8_t _atime = 100;   // Default ATIME (1 unit = 2.78 ms)
-  uint16_t _astep = 999;  // Default ASTEP (steps per ATIME unit)
-  bool _rgbwConversion = false;
+  uint8_t _gain;
+  uint8_t _atime;
+  uint16_t _astep;
+  bool _useRGBW;
 };
 
 }  // namespace Builtin

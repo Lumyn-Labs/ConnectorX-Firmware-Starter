@@ -14,3 +14,4 @@ static const CRGB kCorrection = CRGB(240, 90, 230);
 CLEDController* AddFastLedController(LEDChannelPort, CRGB*, uint16_t);
 LEDChannelPort GetLEDPortFromKey(const std::string&);
 int GetLEDIndicatorFromKey(const std::string& key);
+int GetLEDSelectorFromKey(const std::string& key);

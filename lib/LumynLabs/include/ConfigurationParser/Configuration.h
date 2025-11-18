@@ -13,7 +13,7 @@
 #include "ConfigurationParser/configs/Bitmap.h"
 #include "ConfigurationParser/configs/Channel.h"
 #include "ConfigurationParser/configs/Network.h"
-#include "ConfigurationParser/configs/Sensor.h"
+#include "ConfigurationParser/configs/Module.h"
 #include "constants/board_variant.h"
 
 namespace Configuration {
@@ -25,6 +25,6 @@ struct CXv3Configuration {
   std::optional<std::vector<AnimationSequence>> sequences;
   std::optional<std::vector<Bitmap>> bitmaps;
   std::optional<std::vector<AnimationGroup>> animationGroups;
-  std::optional<std::vector<Sensor>> sensors;
+  std::optional<std::vector<Module>> modules;
 };
 }  // namespace Configuration

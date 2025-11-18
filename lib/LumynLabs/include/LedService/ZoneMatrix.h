@@ -4,7 +4,9 @@
 
 #include "FileAccess/FileService.h"
 #include "LedService/Zone.h"
-#include "definitions/domain/command/led/LEDCommand.h"
+#include "lumyn/domain/command/led/LEDCommand.h"
+
+namespace Command = lumyn::internal::Command;
 #include "definitions/led/BitmapInstance.h"
 
 class ZoneMatrix : public Zone {

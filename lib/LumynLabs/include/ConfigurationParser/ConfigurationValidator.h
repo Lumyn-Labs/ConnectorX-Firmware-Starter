@@ -41,7 +41,7 @@ class ConfigurationValidator {
   Configuration::ParseResult checkBitmapConfigurationValid(
       ArduinoJson::JsonArrayConst arr) const;
 
-  Configuration::ParseResult checkSensorConfigurationValid(
+  Configuration::ParseResult checkModuleConfigurationValid(
       ArduinoJson::JsonArrayConst arr) const;
 
   Configuration::ParseResult checkAnimationGroupConfigurationValid(

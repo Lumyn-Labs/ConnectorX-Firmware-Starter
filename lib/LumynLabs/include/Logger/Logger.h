@@ -29,8 +29,10 @@ class Logger {
 
   void start(void);
 
- private:
   void log(LogLevel, const char* fmt, va_list ap);
+  void logFn(LogLevel level, const char* s);
+
+ private:
   std::string levelToString(LogLevel);
 
   static void taskImpl(void* _this);
@@ -47,3 +49,4 @@ class Logger {
 };
 
 extern Logger SerialLogger;
+extern Adafruit_USBD_CDC USBDataPort;

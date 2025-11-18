@@ -6,8 +6,8 @@
 #include <optional>
 
 #include "FileAccess/FileService.h"
-#include "IDCreator/IDCreator.h"
 #include "definitions/led/BitmapInstance.h"
+#include "lumyn/util/hashing/IDCreator.h"
 
 class BitmapManager {
  public:

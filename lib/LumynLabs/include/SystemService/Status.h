@@ -1,8 +1,11 @@
 #pragma once
 
-#include "IDCreator/IDCreator.h"
-#include "definitions/domain/command/Command.h"
-#include "definitions/domain/event/EventType.h"
+#include "lumyn/util/hashing/IDCreator.h"
+#include "lumyn/domain/command/Command.h"
+#include "lumyn/domain/event/EventType.h"
+
+namespace Eventing = lumyn::internal::Eventing;
+namespace Command = lumyn::internal::Command;
 
 namespace SystemStatus {
 static const std::map<Eventing::EventType, Eventing::Status> kEventStatuses = {
@@ -13,35 +16,44 @@ static const std::map<Eventing::EventType, Eventing::Status> kEventStatuses = {
 static std::map<Eventing::Status, Command::LED::LEDCommand>
     kStatusLedAnimations = {
         {Eventing::Status::Booting,
-         {.type = Command::LED::LEDCommandType::SetAnimation,
-          .setAnimation = {.zoneId = 0,
-                           .animationId =
-                               IDCreator::createId(std::string("Blink")),
-                           .delay = 250,
-                           .color = {.r = 0, .g = 255, .b = 50},
-                           .oneShot = false}}},
+         {Command::LED::LEDCommandType::SetAnimation,
+          {{
+              0,  // zoneId
+              lumyn::internal::IDCreator::createId(std::string("Blink")),
+              250,  // delay
+              {0, 255, 50},  // color
+              0,  // reversed
+              0   // oneShot
+          }}}},
         {Eventing::Status::Active,
-         {.type = Command::LED::LEDCommandType::SetAnimation,
-          .setAnimation = {.zoneId = 0,
-                           .animationId =
-                               IDCreator::createId(std::string("Breathe")),
-                           .delay = 10,
-                           .color = {.r = 0, .g = 20, .b = 200},
-                           .oneShot = false}}},
+         {Command::LED::LEDCommandType::SetAnimation,
+          {{
+              0,  // zoneId
+              lumyn::internal::IDCreator::createId(std::string("Breathe")),
+              10,  // delay
+              {0, 20, 200},  // color
+              0,  // reversed
+              0   // oneShot
+          }}}},
         {Eventing::Status::Error,
-         {.type = Command::LED::LEDCommandType::SetAnimation,
-          .setAnimation = {.zoneId = 0,
-                           .animationId =
-                               IDCreator::createId(std::string("Blink")),
-                           .delay = 500,
-                           .color = {.r = 120, .g = 30, .b = 5},
-                           .oneShot = false}}},
+         {Command::LED::LEDCommandType::SetAnimation,
+          {{
+              0,  // zoneId
+              lumyn::internal::IDCreator::createId(std::string("Blink")),
+              500,  // delay
+              {120, 30, 5},  // color
+              0,  // reversed
+              0   // oneShot
+          }}}},
         {Eventing::Status::Fatal,
-         {.type = Command::LED::LEDCommandType::SetAnimation,
-          .setAnimation = {
-              .zoneId = 0,
-              .animationId = IDCreator::createId(std::string("Blink")),
-              .delay = 250,
-              .color = {.r = 255, .g = 0, .b = 0},
-              .oneShot = false}}}};
+         {Command::LED::LEDCommandType::SetAnimation,
+          {{
+              0,  // zoneId
+              lumyn::internal::IDCreator::createId(std::string("Blink")),
+              250,  // delay
+              {255, 0, 0},  // color
+              0,  // reversed
+              0   // oneShot
+          }}}}
+};
 }  // namespace SystemStatus

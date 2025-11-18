@@ -10,6 +10,7 @@ enum class ModuleErrorType_t : uint8_t {
   PinNotAvailable,
   MissingDeviceType,
   Timeout,
+  ReadError
 };
 
 struct ModuleError_t {

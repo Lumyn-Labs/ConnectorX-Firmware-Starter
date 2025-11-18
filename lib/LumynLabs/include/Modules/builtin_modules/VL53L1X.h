@@ -7,22 +7,24 @@
 #include "Logger/Logger.h"
 #include "Modules/BaseModule.h"
 
+namespace Modules {
+namespace Builtin {
+
 struct __attribute__((packed)) VL53L1XPayload_t {
   uint8_t valid;
   uint16_t dist;
 };
 
-namespace Modules {
-namespace Builtin {
-
-class VL53L1XModule : public BaseModule {
+class VL53L1XModule : public BaseModule<VL53L1XPayload_t> {
  public:
-  VL53L1XModule(const Configuration::Sensor& config) : BaseModule(config) {
+  VL53L1XModule(const Configuration::Module& config) : BaseModule(config) {
     _sensor.setBus(&WireInstance);
   }
 
-  ModuleError_t initSensor(void) override {
+ protected:
+  ModuleError_t initModule() override {
     _sensor.setTimeout(500);
+
     if (!_sensor.init()) {
       SerialLogger.error("VL53L1XModule: Failed to initialize sensor");
       return {
@@ -31,88 +33,91 @@ class VL53L1XModule : public BaseModule {
       };
     }
 
-    if (config().customConfig) {
-      if (config().customConfig->containsKey("distanceMode") &&
-          (*config().customConfig)["distanceMode"]) {
-        String mode = (*config().customConfig)["distanceMode"].as<String>();
-        if (mode == "Long") {
-          _distanceMode = VL53L1X::Long;
-        } else {
-          _distanceMode = VL53L1X::Short;
-        }
-      }
-      if (config().customConfig->containsKey("timingBudget") &&
-          (*config().customConfig)["timingBudget"]) {
-        _measurementTimingBudget =
-            (*config().customConfig)["timingBudget"].as<uint32_t>();
-      }
-      if (config().customConfig->containsKey("continuousPeriod") &&
-          (*config().customConfig)["continuousPeriod"]) {
-        _continuousPeriod =
-            (*config().customConfig)["continuousPeriod"].as<uint32_t>();
-      } else {
-        _continuousPeriod = _defaultContinuousPeriod;
-      }
-    } else {
-      _distanceMode = VL53L1X::Long;
-      _measurementTimingBudget = _defaultTimingBudget;
-      _continuousPeriod = _defaultContinuousPeriod;
-    }
+    parseConfig();
 
     _sensor.setDistanceMode(_distanceMode);
     _sensor.setMeasurementTimingBudget(_measurementTimingBudget);
+    _sensor.startContinuous(_continuousPeriod);
 
-    SerialLogger.verbose(
-        "VL53L1XModule: Sensor configured with distanceMode: %s, timingBudget: "
-        "%u us, continuousPeriod: %lu ms",
+    SerialLogger.info(
+        "VL53L1XModule: Configured - Mode:%s, Timing:%uµs, Period:%lums",
         (_distanceMode == VL53L1X::Long ? "Long" : "Short"),
         _measurementTimingBudget, _continuousPeriod);
 
-    _sensor.startContinuous(_continuousPeriod);
-
     return {
         .errorType = ModuleErrorType_t::None,
+        .additionalInformation = {0, 0, 0, 0},
     };
   }
 
-  std::optional<Eventing::Event> handleSubscribedEvent(
-      const Eventing::Event& evt) override {
-    SerialLogger.verbose("VL53L1XModule: Received event type %d", evt.type);
-    return std::nullopt;
-  }
+  ModuleError_t readData(VL53L1XPayload_t* dataOut) override {
+    if (!dataOut) {
+      return {
+          .errorType = ModuleErrorType_t::ReadError,
+          .additionalInformation = {0xFF, 0, 0, 0},
+      };
+    }
 
-  uint8_t poll(uint8_t* buf, ModuleError_t* err) override {
-    VL53L1XPayload_t payload;
     uint16_t distance = _sensor.read(true);
 
     if (distance == _minValidDistance || distance >= _maxValidDistance) {
-      payload.valid = 0;
-      payload.dist = 0;
-      SerialLogger.verbose(
-          "VL53L1XModule: Invalid measurement detected (distance: %u)",
-          distance);
-    } else {
-      payload.valid = 1;
-      payload.dist = distance;
-      SerialLogger.verbose("VL53L1XModule: Distance measurement: %u mm",
+      dataOut->valid = 0;
+      dataOut->dist = 0;
+      SerialLogger.verbose("VL53L1XModule: Invalid measurement (distance=%u)",
                            distance);
+    } else {
+      dataOut->valid = 1;
+      dataOut->dist = distance;
+      SerialLogger.verbose("VL53L1XModule: Distance=%u mm", distance);
     }
 
-    memcpy(buf, &payload, sizeof(payload));
-    return sizeof(payload);
+    return {
+        .errorType = ModuleErrorType_t::None,
+        .additionalInformation = {0, 0, 0, 0},
+    };
   }
 
  private:
-  VL53L1X _sensor;
-  uint32_t _continuousPeriod;  // Continuous measurement period in ms
-  VL53L1X::DistanceMode _distanceMode = VL53L1X::Long;
-  uint16_t _measurementTimingBudget = 50000;
+  void parseConfig() {
+    _distanceMode = VL53L1X::Long;
+    _measurementTimingBudget = _defaultTimingBudget;
+    _continuousPeriod = _defaultContinuousPeriod;
 
-  // Default values
-  uint32_t _defaultContinuousPeriod = 50;
-  uint16_t _defaultTimingBudget = 50000;
-  uint16_t _minValidDistance = 0;
-  uint16_t _maxValidDistance = 8190;
+    if (!config().customConfig) {
+      return;
+    }
+
+    auto& cfg = *config().customConfig;
+
+    if (cfg.containsKey("distanceMode") && cfg["distanceMode"]) {
+      String mode = cfg["distanceMode"].as<String>();
+      _distanceMode = (mode == "Long") ? VL53L1X::Long : VL53L1X::Short;
+      SerialLogger.verbose("VL53L1XModule: distanceMode='%s'", mode.c_str());
+    }
+
+    if (cfg.containsKey("timingBudget") && cfg["timingBudget"]) {
+      _measurementTimingBudget = cfg["timingBudget"].as<uint32_t>();
+      SerialLogger.verbose("VL53L1XModule: timingBudget=%u µs",
+                           _measurementTimingBudget);
+    }
+
+    if (cfg.containsKey("continuousPeriod") && cfg["continuousPeriod"]) {
+      _continuousPeriod = cfg["continuousPeriod"].as<uint32_t>();
+      SerialLogger.verbose("VL53L1XModule: continuousPeriod=%lu ms",
+                           _continuousPeriod);
+    }
+  }
+
+  VL53L1X _sensor;
+
+  VL53L1X::DistanceMode _distanceMode;
+  uint32_t _measurementTimingBudget;
+  uint32_t _continuousPeriod;
+
+  static constexpr uint32_t _defaultTimingBudget = 50000;
+  static constexpr uint32_t _defaultContinuousPeriod = 50;
+  static constexpr uint16_t _minValidDistance = 0;
+  static constexpr uint16_t _maxValidDistance = 8190;
 };
 
 }  // namespace Builtin

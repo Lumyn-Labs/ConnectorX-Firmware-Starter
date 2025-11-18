@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 
+#include "Modules/builtin_modules/APDS9151_mod.h"
 #include "Modules/builtin_modules/AS7341.h"
 #include "Modules/builtin_modules/AnalogInput.h"
 #include "Modules/builtin_modules/DigitalInput.h"
@@ -10,18 +11,23 @@
 
 namespace Modules::Builtin {
 static ModuleInstance VL53L1X{
-    .id = "VL53L1X", .cb = [](const Configuration::Sensor& cfg) {
+    .id = "VL53L1X", .cb = [](const Configuration::Module& cfg) {
       return std::make_shared<Modules::Builtin::VL53L1XModule>(cfg);
     }};
 
 static ModuleInstance DigitalInput{
-    .id = "DigitalInput", .cb = [](const Configuration::Sensor& cfg) {
+    .id = "DigitalInput", .cb = [](const Configuration::Module& cfg) {
       return std::make_shared<Modules::Builtin::DigitalInputModule>(cfg);
     }};
 
 static ModuleInstance AnalogInput{
-    .id = "AnalogInput", .cb = [](const Configuration::Sensor& cfg) {
+    .id = "AnalogInput", .cb = [](const Configuration::Module cfg) {
       return std::make_shared<Modules::Builtin::AnalogInputModule>(cfg);
+    }};
+
+static ModuleInstance APDS9151{
+    .id = "APDS9151", .cb = [](const Configuration::Module& cfg) {
+      return std::make_shared<Modules::Builtin::APDS9151Module>(cfg);
     }};
 
 // Not registered in firmware until implementation can be validated

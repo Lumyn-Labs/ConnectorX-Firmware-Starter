@@ -5,8 +5,8 @@
 #include <queue.h>
 #include <task.h>
 
-#include "definitions/domain/command/led/LEDCommand.h"
 #include "definitions/led/AnimationInstance.h"
+#include "lumyn/domain/command/led/LEDCommand.h"
 
 class StatusLedService {
  public:
@@ -16,12 +16,13 @@ class StatusLedService {
   void init(void);
   void start(uint32_t stackSize, UBaseType_t priority);
 
-  void setAnimation(Command::LED::SetAnimationData* animation);
+  void setAnimation(lumyn::internal::Command::LED::SetAnimationData* animation);
 
  private:
   static void initImpl(void* _this);
   void task(void);
-  void handleAnimation(Command::LED::SetAnimationData* animation);
+  void handleAnimation(
+      lumyn::internal::Command::LED::SetAnimationData* animation);
   bool incrementState(void);
 
   inline bool shouldUpdateState() const {
@@ -40,7 +41,7 @@ class StatusLedService {
   QueueHandle_t _commandQueue;
 
   uint16_t _curState;
-  Command::LED::AnimationColor _curColor;
+  lumyn::internal::Command::LED::AnimationColor _curColor;
   uint32_t _lastUpdateMs;
   uint16_t _curDelay;
   const Animation::AnimationInstance* _curAnimation = nullptr;

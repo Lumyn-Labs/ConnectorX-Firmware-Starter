@@ -12,7 +12,7 @@
 #include "ConfigurationParser/ConfigurationParser.h"
 #include "FileAccess/BitmapReader.h"
 #include "Networking/NetworkingGlobalMutexes.h"
-#include "definitions/domain/file/Files.h"
+#include "lumyn/domain/file/Files.h"
 
 class FileService {
  public:
@@ -46,13 +46,26 @@ class FileService {
   };
 
   struct QueuedFileRequest {
-    Files::Files* info;
+    lumyn::internal::Files::Files* info;
     TaskNotification notify;
     QueueHandle_t responseQueue;
   };
 
   struct QueuedFileResponse {
     bool success;
+  };
+
+  struct QueuedFileReadRequest {
+    std::string_view path;
+    TaskNotification notify;
+    QueueHandle_t responseQueue;
+  };
+
+  struct QueuedFileReadResponse {
+    bool success;
+    uint32_t fileSize;
+    // ! Make sure to call delete[] if result is Ok
+    uint8_t* data;
   };
 
   FileService(fs::FS& fs, uint8_t maxQueueElements = 20,
@@ -67,7 +80,9 @@ class FileService {
   // ! Must be used if performing file operations from another Task
   bool readConfigQueued(QueuedConfigRequest* request);
   // ! Must be used if performing file operations from another Task
-  bool writeFileQueued(QueuedFileRequest* file);
+  bool writeFileQueued(QueuedFileRequest* request);
+  // ! Must be used if performing file operations from another Task
+  bool readFileQueued(QueuedFileReadRequest* request);
 
   inline BitmapReader* reader() const { return _bmpReader.get(); }
   inline ConfigurationParser* parser() const { return _configParser.get(); }
@@ -82,6 +97,10 @@ class FileService {
   void handleBitmapRequest();
   void handleConfigRequest();
   void handleWriteFileRequest();
+  void handleReadFileRequest();
+
+  void readFile(const QueuedFileReadRequest& request,
+                QueuedFileReadResponse& response);
 
   fs::FS& _fs;
   uint8_t _maxQueueElements;
@@ -100,6 +119,7 @@ class FileService {
   QueueHandle_t _bitmapQueue;
   QueueHandle_t _configQueue;
   QueueHandle_t _writeQueue;
+  QueueHandle_t _readQueue;
 };
 
 #if CX_BOARD_FEATURES_HAS_SD_CARD

@@ -9,7 +9,9 @@
 #include <memory>
 #include <string>
 
-#include "definitions/domain/transmission/Transmission.h"
+#include "lumyn/domain/transmission/Transmission.h"
+
+namespace Transmission = lumyn::internal::Transmission;
 
 namespace Networking {
 class INetworkingAdapter {
@@ -21,5 +23,6 @@ class INetworkingAdapter {
   virtual void onTransmission(
       std::function<void(Transmission::Transmission*)>) = 0;
   virtual const char* name(void) const = 0;
+  virtual uint32_t maxMTU(void) const = 0;
 };
 }  // namespace Networking

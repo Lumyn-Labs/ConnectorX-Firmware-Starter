@@ -17,7 +17,9 @@
 #include "LedService/AnimationSequenceManager.h"
 #include "LedService/BitmapManager.h"
 #include "LedService/Channel.h"
-#include "definitions/domain/command/led/LEDCommand.h"
+#include "lumyn/domain/command/led/LEDCommand.h"
+
+namespace Command = lumyn::internal::Command;
 
 /**
  * The LEDService maintains ownership of Channels and Zones
@@ -96,10 +98,10 @@ class LEDService {
   void setColorGroupAsync(std::string_view groupId,
                           Command::LED::AnimationColor color);
   void setBitmapAsync(std::string_view zoneId, std::string_view bitmapId,
-                      std::optional<Command::LED::AnimationColor>,
+                      std::optional<Command::LED::AnimationColor> color,
                       bool oneShot);
   void setBitmapGroupAsync(std::string_view groupId, std::string_view bitmapId,
-                           std::optional<Command::LED::AnimationColor>,
+                           std::optional<Command::LED::AnimationColor> color,
                            bool oneShot);
   void setMatrixTextAsync(std::string_view zoneId,
                           Command::LED::AnimationColor color,
@@ -133,13 +135,14 @@ class LEDService {
 
   inline const BitmapManager& bitmapManager() const { return *_bitmapManager; }
 
-  static Eventing::Event createEventFromLedError(LEDError err);
+  static Eventing::Event createEventFromLedError(LEDError err,
+                                                 const std::string& name);
 
  private:
   static void initImpl(void* _this);
   void task(void);
   void handleCommand(Command::LED::LEDCommand& command);
-  void sendEventFromLEDError(LEDError err);
+  void sendEventFromLEDError(LEDError err, const std::string& name);
 
   LEDError setAnimation(uint16_t zoneId, uint16_t animationId, uint16_t delay,
                         Configuration::ActionColor color, bool reversed,
@@ -152,9 +155,10 @@ class LEDService {
   LEDError setColor(uint16_t zoneId, Configuration::ActionColor color);
   LEDError setColorGroup(uint16_t groupId, Configuration::ActionColor color);
   LEDError setBitmap(uint16_t zoneId, uint16_t bitmapId,
-                     std::optional<Configuration::ActionColor>, bool oneShot);
+                     std::optional<Configuration::ActionColor> color,
+                     bool oneShot);
   LEDError setBitmapGroup(uint16_t groupId, uint16_t bitmapId,
-                          std::optional<Configuration::ActionColor>,
+                          std::optional<Configuration::ActionColor> color,
                           bool oneShot);
   LEDError setMatrixText(uint16_t zoneId, Configuration::ActionColor color,
                          Command::LED::MatrixTextScrollDirection direction,

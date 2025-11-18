@@ -5,7 +5,7 @@
 #include <optional>
 #include <string_view>
 
-#include "definitions/domain/command/led/LEDCommand.h"
+#include "lumyn/domain/command/led/LEDCommand.h"
 
 namespace Configuration {
 struct ActionColor {
@@ -13,7 +13,7 @@ struct ActionColor {
   uint8_t g;
   uint8_t b;
 
-  static ActionColor fromCommand(Command::LED::AnimationColor color) {
+  static ActionColor fromCommand(lumyn::internal::Command::LED::AnimationColor color) {
     return {
         .r = color.r,
         .g = color.g,

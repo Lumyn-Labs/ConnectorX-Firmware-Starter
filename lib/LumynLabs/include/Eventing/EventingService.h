@@ -9,7 +9,9 @@
 #include <bitset>
 #include <map>
 
-#include "definitions/domain/event/Event.h"
+#include "lumyn/domain/event/Event.h"
+
+namespace Eventing = lumyn::internal::Eventing;
 
 class EventingService {
  public:

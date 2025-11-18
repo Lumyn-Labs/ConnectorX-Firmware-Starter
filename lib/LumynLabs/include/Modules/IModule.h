@@ -1,25 +1,28 @@
 #pragma once
 
-#include <Arduino.h>
-#include <ArduinoJson.h>
+#include <stdint.h>
 
 #include <optional>
+#include <vector>
 
-#include "ConfigurationParser/configs/Sensor.h"
-#include "ModuleError.h"
-#include "definitions/domain/event/Event.h"
+#include "ConfigurationParser/configs/Module.h"
+#include "Modules/ModuleError.h"
+#include "lumyn/domain/event/Event.h"
 
 namespace Modules {
+
 class IModule {
  public:
-  IModule(const Configuration::Sensor& config) : _config{config} {}
+  virtual ~IModule() = default;
 
-  virtual ModuleError_t init(void) = 0;
-  virtual void loop(void) = 0;
+  virtual ModuleError_t init() = 0;
+  virtual ModuleError_t read(std::vector<uint8_t>& dataOut) = 0;
+  // TODO: Later
+  // virtual std::optional<Eventing::Event> handleEvent(
+  //     const Eventing::Event& evt) = 0;
 
-  const Configuration::Sensor& config() const { return _config; }
-
- protected:
-  const Configuration::Sensor& _config;
+  virtual uint16_t getId() const = 0;
+  virtual const Configuration::Module& config() const = 0;
 };
+
 }  // namespace Modules

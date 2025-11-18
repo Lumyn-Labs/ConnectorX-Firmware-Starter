@@ -6,6 +6,7 @@ namespace Configuration {
 enum class NetworkType {
   I2C = 0,
   USB = 1,
+  CAN = 2,
 };
 
 struct I2CNetwork {

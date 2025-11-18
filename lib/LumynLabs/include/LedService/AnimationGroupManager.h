@@ -5,7 +5,7 @@
 #include <map>
 #include <optional>
 
-#include "IDCreator/IDCreator.h"
+#include "lumyn/util/hashing/IDCreator.h"
 #include "definitions/led/AnimationGroupInstance.h"
 
 class AnimationGroupManager {

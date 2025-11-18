@@ -4,9 +4,12 @@
 
 #include <string>
 
-#include "definitions/domain/event/Event.h"
-#include "definitions/domain/request/Request.h"
-#include "definitions/domain/request/RequestType.h"
+#include "lumyn/domain/event/Event.h"
+#include "lumyn/domain/request/Request.h"
+#include "lumyn/domain/request/RequestType.h"
+
+namespace Eventing = lumyn::internal::Eventing;
+namespace Request = lumyn::internal::Request;
 
 struct RuntimeContext {
   Request::HostConnectionSource connSource;
