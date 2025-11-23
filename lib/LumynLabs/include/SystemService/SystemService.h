@@ -21,7 +21,7 @@
 #define bi_program_version_string(CX_BOARD_INFO_VERSION)
 
 #define PROGRAM_VERSION_MAJOR 3
-#define PROGRAM_VERSION_MINOR 1
+#define PROGRAM_VERSION_MINOR 2
 #define PROGRAM_VERSION_PATCH 1
 
 class SystemService {

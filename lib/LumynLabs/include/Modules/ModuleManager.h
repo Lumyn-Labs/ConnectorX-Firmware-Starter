@@ -50,6 +50,7 @@ class ModuleManager {
                                  Eventing::Event* evtOut = nullptr);
   std::vector<uint8_t> buildModuleDataPacket(uint16_t moduleId,
                                              const std::vector<uint8_t>& data);
+  void handlePushData(uint16_t moduleId, ArduinoJson::JsonVariantConst json);
 
  private:
   static void initImpl(void* _this);

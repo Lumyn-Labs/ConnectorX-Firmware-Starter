@@ -14,6 +14,7 @@
 #include "Eventing/EventingService.h"
 #include "FileAccess/FileService.h"
 #include "Networking/FilesHandler.h"
+#include "Networking/ModuleHandler.h"
 #include "NetworkingGlobalMutexes.h"
 #include "RequestHandler.h"
 #include "adapters/INetworkingAdapter.h"
@@ -32,7 +33,7 @@ namespace Response = lumyn::internal::Response;
 class NetworkingService {
  public:
   NetworkingService(ConfigurationValidator&, CommandHandler&, RequestHandler&,
-                    TickType_t queueTimeout);
+                    ModuleHandler&, TickType_t queueTimeout);
 
   void init(const Configuration::Network* config, uint16_t queueSize);
   void start(uint32_t stackSize, UBaseType_t priority);
@@ -55,6 +56,7 @@ class NetworkingService {
   ConfigurationValidator& _configValidator;
   CommandHandler& _cmdHandler;
   RequestHandler& _requestHandler;
+  ModuleHandler& _moduleHandler;
   std::unique_ptr<FilesHandler> _filesHandler;
 
   uint16_t _queueSize = 0;

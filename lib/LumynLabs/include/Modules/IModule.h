@@ -4,6 +4,7 @@
 
 #include <optional>
 #include <vector>
+#include <ArduinoJson.h>
 
 #include "ConfigurationParser/configs/Module.h"
 #include "Modules/ModuleError.h"
@@ -17,6 +18,7 @@ class IModule {
 
   virtual ModuleError_t init() = 0;
   virtual ModuleError_t read(std::vector<uint8_t>& dataOut) = 0;
+  virtual bool pushData(ArduinoJson::JsonVariantConst json) = 0;
   // TODO: Later
   // virtual std::optional<Eventing::Event> handleEvent(
   //     const Eventing::Event& evt) = 0;
