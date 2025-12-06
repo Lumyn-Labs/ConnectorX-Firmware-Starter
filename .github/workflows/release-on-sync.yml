@@ -1,13 +1,12 @@
-name: Create release when firmware is synced
+name: Create Release on SDK Sync
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
     paths:
       - 'VERSION'
       - 'firmware/**'
-      - 'lib/**'
-      - 'include/**'
+      - 'lib/LumynLabsSDK/**'
 
 jobs:
   release:
@@ -18,15 +17,37 @@ jobs:
 
       - name: Read version from VERSION file
         id: ver
-        run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
+        run: |
+          VERSION=$(cat VERSION)
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Create or update release
         uses: ncipollo/release-action@v1
         with:
           tag: v${{ steps.ver.outputs.version }}
-          name: Firmware v${{ steps.ver.outputs.version }}
+          name: ConnectorX v${{ steps.ver.outputs.version }}
+          body: |
+            ## ConnectorX Custom Firmware Starter v${{ steps.ver.outputs.version }}
+            
+            ### Quick Start (Ready to Go!)
+            ```bash
+            git clone https://github.com/${{ github.repository }}.git
+            cd ConnectorX-Fimware-Starter
+            pio run -t upload
+            ```
+            
+            The SDK and all dependencies are included - just clone and build!
+            
+            ### Recovery Firmware
+            Download `firmware.uf2` below to restore your ConnectorX to factory defaults:
+            1. Hold BOOT button while pressing RESET
+            2. Drag `firmware.uf2` to the mounted drive
+            
+            See [README.md](https://github.com/${{ github.repository }}/blob/main/README.md) for custom module development.
           artifacts: "firmware/*.uf2"
-          artifactErrorsFailBuild: true
+          artifactErrorsFailBuild: false
           allowUpdates: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
