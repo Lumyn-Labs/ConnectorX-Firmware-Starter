@@ -1,30 +1,99 @@
-# ConnectorX-Fimware-Starter
+# ConnectorX - Custom Firmware Starter
 
-- [ConnectorX-Fimware-Starter](#connectorx-fimware-starter)
-  - [What can you do with custom firmware?](#what-can-you-do-with-custom-firmware)
+Create custom modules (sensors/actuators) and behaviors for your ConnectorX board using the Lumyn Labs SDK.
+
+- [ConnectorX - Custom Firmware Starter](#connectorx---custom-firmware-starter)
+  - [Quick Start](#quick-start)
+  - [SDK Setup](#sdk-setup)
+  - [Creating Custom Modules](#creating-custom-modules)
   - [Recovery](#recovery)
-    - [Flash a default UF2](#flash-a-default-uf2)
-    - [Revert to empty main.cpp](#revert-to-empty-maincpp)
-  - [Set up](#set-up)
-    - [Install PlatformIO](#install-platformio)
-    - [main.cpp](#maincpp)
-    - [Register Custom Animations](#register-custom-animations)
-      - [What is an Animation?](#what-is-an-animation)
-      - [More about `Animation::AnimationFrameCallback`](#more-about-animationanimationframecallback)
-      - [Creating one](#creating-one)
-      - [Registration](#registration)
-    - [Register Custom Modules](#register-custom-modules)
-    - [Flashing firmware](#flashing-firmware)
-    - [:warning: BE CAREFUL :warning:](#warning-be-careful-warning)
-  - [Available classes/methods](#available-classesmethods)
-    - [SystemManagerService](#systemmanagerservice)
-    - [LedService](#ledservice)
-    - [SerialLogger](#seriallogger)
-    - [EventingService](#eventingservice)
+  - [Project Structure](#project-structure)
 
-## What can you do with custom firmware?
+## Quick Start
 
-At Lumyn Labs, we believe in empowering everyone to truly "connect anything", which also means letting you to use your device in the way you want. Whether it's creating a new Animation for use in a Sequence or adding a Custom Module to read from a favorite sensor, custom firmware allows for it all. By using this repository, you can leverage the existing ConnectorX infrastructure/libraries to do incredible things.
+1. **Install PlatformIO** - VS Code extension recommended
+2. **Copy SDK files** - See [SDK Setup](#sdk-setup) below
+3. **Build & Flash** - `pio run -t upload` or use PlatformIO GUI
+
+## SDK Setup
+
+Before building, copy the SDK files to your project:
+
+```
+lib/
+└── LumynLabsSDK/
+    ├── include/           # SDK headers
+    │   ├── LumynLabs.h    # Main entry point
+    │   └── LumynLabs/     # API headers
+    └── lib/
+        └── libLumynLabsSDK.a  # Pre-compiled library
+```
+
+The SDK provides:
+
+- Module/sensor framework
+- I2C, SPI, UART peripheral access
+- Animation and LED control
+- Network communication
+- Display APIs
+
+## Creating Custom Modules
+
+Define modules by inheriting from `LumynLabs::Module<T>`:
+
+```cpp
+#include <LumynLabs.h>
+
+// Your sensor data structure
+struct MySensorData {
+    float temperature;
+    float humidity;
+};
+
+class MySensor : public LumynLabs::Module<MySensorData> {
+public:
+    MySensor(const LumynLabs::ModuleConfig& config)
+        : Module(config) {}
+
+    LumynLabs::ModuleError initModule() override {
+        // Initialize your hardware
+        auto& i2c = peripherals().getI2C();
+        i2c.beginTransmission(0x40);
+        if (i2c.endTransmission() != 0) {
+            return LumynLabs::ModuleError::initError("Sensor not found");
+        }
+        return LumynLabs::ModuleError::ok();
+    }
+
+    LumynLabs::ModuleError readData(MySensorData* dataOut) override {
+        // Read from your sensor
+        dataOut->temperature = readTemperature();
+        dataOut->humidity = readHumidity();
+        return LumynLabs::ModuleError::ok();
+    }
+};
+
+void setup() {
+    SystemManagerService.init();
+    LumynLabs::registerModule<MySensorData, MySensor>("MY_SENSOR");
+    SystemManagerService.initServices();
+}
+```
+
+### Module Lifecycle
+
+1. **Constructor** - Receives configuration from the system
+2. **initModule()** - Called once to initialize hardware
+3. **readData()** - Called periodically based on `pollingRateMs`
+4. **pushData()** - Optional, handles incoming commands
+
+### Accessing Peripherals
+
+```cpp
+auto& i2c = peripherals().getI2C();    // I2C bus
+auto& spi = peripherals().getSPI();    // SPI bus  
+auto& uart = peripherals().getUART();  // UART interface
+```
 
 ## Recovery
 

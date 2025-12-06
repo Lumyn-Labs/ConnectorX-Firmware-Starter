@@ -1,0 +1,46 @@
+{
+  "authors": [
+    {
+      "name": "Lumyn Labs",
+      "url": "https://lumynlabs.com"
+    }
+  ],
+  "version": "1.0.0",
+  "name": "LumynLabsSDK",
+  "dependencies": {
+    "SDFS": "*",
+    "EEPROM": "*",
+    "FreeRTOS": "*",
+    "SPI": "*",
+    "adafruit/Adafruit TinyUSB Library": "^3.4.0",
+    "LittleFS": "*",
+    "Wire": "*"
+  },
+  "keywords": [
+    "connectorx",
+    "led",
+    "robotics",
+    "frc",
+    "lumyn"
+  ],
+  "platforms": [
+    "raspberrypi"
+  ],
+  "license": "Proprietary",
+  "description": "Lumyn Labs SDK for ConnectorX - Pre-compiled library for custom firmware development",
+  "build": {
+    "flags": [
+      "-I include",
+      "-I include/FastLED"
+    ],
+    "libArchive": false,
+    "extraScript": "link_sdk.py"
+  },
+  "frameworks": [
+    "arduino"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lumynlabs/connectorx-sdk"
+  }
+}
