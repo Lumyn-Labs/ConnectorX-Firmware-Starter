@@ -22,6 +22,8 @@
 #if CX_FEATURE_LED
 #include "LumynLabs/Led/Color.h"
 #include "LumynLabs/Led/Animation.h"
+#include "LumynLabs/Led/AnimationManager.h"
+#include "LumynLabs/Led/LedService.h"
 #endif
 
 // Module APIs - conditional on CX_FEATURE_MODULES
