@@ -1,33 +1,32 @@
 {
+  "name": "LumynLabs-cx",
+  "version": "1.0.0",
+  "description": "Lumyn Labs SDK for ConnectorX",
+  "keywords": [
+    "connectorx",
+    "led",
+    "animation",
+    "robotics",
+    "frc",
+    "rp2040"
+  ],
   "authors": [
     {
       "name": "Lumyn Labs",
       "url": "https://lumynlabs.com"
     }
   ],
-  "version": "1.0.0",
-  "name": "LumynLabsSDK",
-  "dependencies": {
-    "SDFS": "*",
-    "EEPROM": "*",
-    "FreeRTOS": "*",
-    "SPI": "*",
-    "adafruit/Adafruit TinyUSB Library": "^3.4.0",
-    "LittleFS": "*",
-    "Wire": "*"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lumynlabs/connectorx-sdk"
   },
-  "keywords": [
-    "connectorx",
-    "led",
-    "robotics",
-    "frc",
-    "lumyn"
+  "license": "Proprietary",
+  "frameworks": [
+    "arduino"
   ],
   "platforms": [
     "raspberrypi"
   ],
-  "license": "Proprietary",
-  "description": "Lumyn Labs SDK for ConnectorX - Pre-compiled library for custom firmware development",
   "build": {
     "flags": [
       "-I include",
@@ -36,11 +35,23 @@
     "libArchive": false,
     "extraScript": "link_sdk.py"
   },
-  "frameworks": [
-    "arduino"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/lumynlabs/connectorx-sdk"
+  "dependencies": {
+    "FreeRTOS": "*",
+    "LittleFS": "*",
+    "SDFS": "*",
+    "SPI": "*",
+    "Wire": "*",
+    "EEPROM": "*",
+    "adafruit/Adafruit TinyUSB Library": "^3.4.0"
+  },
+  "export": {
+    "include": [
+      "include/*",
+      "lib/*"
+    ],
+    "exclude": [
+      "src/*",
+      ".pio/*"
+    ]
   }
 }
