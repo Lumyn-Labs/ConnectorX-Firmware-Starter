@@ -25,11 +25,11 @@
 #define CX_FEATURE_DIO 1
 #define CX_FEATURE_AIO 1
 
-// LED Configuration (safe to expose - no pin info)
+// LED Configuration
 #define CX_LED_CHANNEL_COUNT 1
 #define CX_LED_POWER_DRAW_MA 60
 
-// Screen Configuration (safe to expose - no addresses)
+// Screen Configuration
 #define CX_SCREEN_WIDTH_PX 128
 #define CX_SCREEN_HEIGHT_PX 64
 
