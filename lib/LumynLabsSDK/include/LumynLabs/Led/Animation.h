@@ -12,9 +12,7 @@
 #pragma once
 
 #include "Color.h"
-#include <functional>
-#include <string_view>
-#include <cstdint>
+#include "lumyn/definitions/led/AnimationInstance.h"
 
 namespace LumynLabs
 {
@@ -22,25 +20,7 @@ namespace LumynLabs
   /**
    * @brief State counting mode for animations
    */
-  enum class AnimationStateMode
-  {
-    /**
-     * @brief Constant state count
-     *
-     * Animation has a fixed number of states regardless of LED count.
-     * Use for animations like "blink" or "pulse" that cycle through
-     * fixed states.
-     */
-    Constant = 0,
-
-    /**
-     * @brief LED count based state count
-     *
-     * Animation state count is based on LED count plus a base value.
-     * Use for animations like "chase" or "wave" that travel across LEDs.
-     */
-    LedCount,
-  };
+  using AnimationStateMode = lumyn::internal::Animation::StateMode;
 
   /**
    * @brief Animation frame callback
@@ -64,7 +44,7 @@ namespace LumynLabs
    * }
    * @endcode
    */
-  using AnimationFrameCallback = std::function<bool(Color *, Color, uint16_t, uint16_t)>;
+  using AnimationFrameCallback = lumyn::internal::Animation::AnimationFrameCallback;
 
   /**
    * @brief Animation definition
@@ -88,66 +68,14 @@ namespace LumynLabs
    * };
    *
    * // Register with animation manager
-   * AnimationMngr.registerAnimation(myChase);
+   * LumynLabs::registerAnimation(myChase);
    * @endcode
    */
-  struct AnimationInstance
-  {
-    /**
-     * @brief Unique animation identifier
-     *
-     * Used to reference this animation by name.
-     * Should be uppercase with underscores (e.g., "MY_ANIMATION").
-     */
-    std::string_view id;
-
-    /**
-     * @brief State counting mode
-     *
-     * Determines how stateCount is interpreted.
-     */
-    AnimationStateMode stateMode;
-
-    /**
-     * @brief Number of states in animation
-     *
-     * For Constant mode: Total number of states.
-     * For LedCount mode: Added to LED count for total states.
-     */
-    uint16_t stateCount;
-
-    /**
-     * @brief Default delay between frames in milliseconds
-     *
-     * Can be overridden when setting the animation.
-     */
-    uint16_t defaultDelay;
-
-    /**
-     * @brief Default color
-     *
-     * Used when no color is specified.
-     */
-    Color defaultColor;
-
-    /**
-     * @brief Animation frame callback
-     *
-     * Called for each frame to update LED states.
-     */
-    AnimationFrameCallback cb;
-  };
+  using AnimationInstance = lumyn::internal::Animation::AnimationInstance;
 
   /**
    * @brief No-op animation (turns LEDs off)
    */
-  static const AnimationInstance NoAnimation = {
-      .id = "NONE",
-      .stateMode = AnimationStateMode::Constant,
-      .stateCount = 1,
-      .defaultDelay = 65535U,
-      .defaultColor = Color::Black(),
-      .cb = [](Color *, Color, uint16_t, uint16_t)
-      { return false; }};
+  static const AnimationInstance &NoAnimation = lumyn::internal::Animation::None;
 
 } // namespace LumynLabs

@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include <LumynLabs/Led/Animation.h>
+#include "Animation.h"
 #include <cstdint>
 
 /**

@@ -1,11 +1,67 @@
-#ifndef __INC_PIXELSET_H
-#define __INC_PIXELSET_H
+#pragma once
+
+
+#include "fl/force_inline.h"
+#include "fl/namespace.h"
+#include "fl/unused.h"
+#include "fl/colorutils.h"
+
+#include "fl/fill.h"
+#include "fl/blur.h"
 
 #include "FastLED.h"
+
+#define FUNCTION_FILL_RAINBOW(a,b,c,d) fl::fill_rainbow(a,b,c,d)
+#define FUNCTION_NAPPLY_GAMMA(a,b,c) fl::napplyGamma_video(a,b,c)
+#define FUNCTION_NAPPLY_GAMMA_RGB(a,b,c,d,e) fl::napplyGamma_video(a,b,c,d,e)
+#define FUNCTION_BLUR1D(a,b,c) fl::blur1d(a,b,c)
+#define FUNCTION_FILL_GRADIENT(a,b,c,d,e) fl::fill_gradient(a,b,c,d,e)
+#define FUNCTION_FILL_GRADIENT3(a,b,c,d,e,f) fl::fill_gradient(a,b,c,d,e,f)
+#define FUNCTION_FILL_GRADIENT4(a,b,c,d,e,f,g) fl::fill_gradient(a,b,c,d,e,f,g)
+#define FUNCTION_NBLEND(a,b,c) fl::nblend(a,b,c)
+#define FUNCTION_FILL_GRADIENT_RGB(a,b,c,d) fl::fill_gradient_RGB(a,b,c,d)
+#define FUNCTION_FILL_GRADIENT_RGB3(a,b,c,d,e) fl::fill_gradient_RGB(a,b,c,d,e)
+#define FUNCTION_FILL_GRADIENT_RGB4(a,b,c,d,e,f) fl::fill_gradient_RGB(a,b,c,d,e,f)
 
 #ifndef abs
 #include <stdlib.h>
 #endif
+
+
+#include "fl/namespace.h"
+
+FASTLED_NAMESPACE_BEGIN
+
+template<class PIXEL_TYPE>
+class CPixelView;
+
+/// @brief CPixelView specialized for CRGB pixel arrays - the most commonly used pixel view type.
+///
+/// CRGBSet provides all the functionality of CPixelView optimized for CRGB pixels.
+/// This is the primary interface for working with LED strips in FastLED.
+///
+/// **Quick Start:**
+/// ```cpp
+/// CRGB leds[NUM_LEDS];
+/// CRGBSet pixels(leds, NUM_LEDS);
+/// 
+/// // Basic operations
+/// pixels[0] = CRGB::Red;
+/// pixels.fill_solid(CRGB::Blue);
+/// pixels.fadeToBlackBy(64);
+/// 
+/// // Advanced effects
+/// pixels(0, 10).fill_rainbow(0, 25);      // Rainbow on first 10 LEDs
+/// pixels(20, 10).blur1d(128);             // Blur segment (reverse order)
+/// ```
+///
+/// @see CPixelView for full API documentation
+typedef CPixelView<CRGB> CRGBSet;
+
+/// Retrieve a pointer to a CRGB array, using a CRGBSet and an LED offset
+FASTLED_FORCE_INLINE
+CRGB *operator+(const CRGBSet & pixels, int offset);
+
 
 /// @file pixelset.h
 /// Declares classes for managing logical groups of LEDs
@@ -15,10 +71,41 @@
 /// @brief Classes for managing logical groups of LEDs
 /// @{
 
-/// Represents a set of LED objects.  Provides the [] array operator, and works like a normal array in that case.
-/// This should be kept in sync with the set of functions provided by the other @ref PixelTypes as well as functions in colorutils.h.
-/// @tparam PIXEL_TYPE the type of LED data referenced in the class, e.g. CRGB.
-/// @note A pixel set is a window into another set of LED data, it is not its own set of LED data.
+/// @brief Represents a view/window into a set of LED pixels, providing array-like access and rich color operations.
+///
+/// CPixelView provides a non-owning view into LED pixel data with extensive manipulation capabilities.
+/// It supports forward and reverse iteration, subset operations, and a comprehensive set of color functions.
+/// 
+/// **Key Features:**
+/// - Array-like access with `operator[]`
+/// - Subset creation with `operator(start, end)` 
+/// - Reverse iteration when `start > end`
+/// - Rich color operations: fill, gradients, scaling, blending
+/// - Automatic conversion to `fl::span<T>` for modern C++ interop
+/// - Iterator support for range-based loops
+/// 
+/// **Common Usage Patterns:**
+/// ```cpp
+/// // Basic usage
+/// CRGB leds[100];
+/// CRGBSet pixels(leds, 100);
+/// pixels[0] = CRGB::Red;                    // Set individual pixel
+/// pixels.fill_solid(CRGB::Blue);           // Fill all pixels
+/// 
+/// // Subset operations  
+/// auto segment = pixels(10, 50);           // Forward subset (indices 10-50)
+/// auto reverse = pixels(50, 10);           // Reverse subset (50 down to 10)
+/// segment.fill_rainbow(0, 5);              // Apply rainbow to segment
+/// 
+/// // Modern C++ interop
+/// fl::span<CRGB> span = pixels;            // Automatic conversion
+/// std::fill(pixels.begin(), pixels.end(), CRGB::Green);  // STL algorithms
+/// ```
+///
+/// @tparam PIXEL_TYPE the type of LED data referenced, typically CRGB or CHSV
+/// @note This is a non-owning view - it references existing LED data, doesn't own it
+/// @see CRGBSet - typedef for CPixelView<CRGB>, the most common usage
+/// @see CRGBArray - version that owns its LED data
 template<class PIXEL_TYPE>
 class CPixelView {
 public:
@@ -67,7 +154,7 @@ public:
     /// result in a reverse ordering for many functions (useful for mirroring).
     /// @param start the first element from this set for the new subset
     /// @param end the last element for the new subset
-    inline CPixelView operator()(int start, int end) { return CPixelView(leds, start, end); }
+    inline CPixelView operator()(int start, int end) { if(dir & 0x80) { return CPixelView(leds+len+1, -len-start-1, -len-end-1); } else { return CPixelView(leds, start, end); } }
 
     // Access an inclusive subset of the LEDs in this set, starting from the first.
     // @param end the last element for the new subset
@@ -123,12 +210,24 @@ public:
     /// Increment every pixel value in this set
     inline CPixelView & operator++() { for(iterator pixel = begin(), _end = end(); pixel != _end; ++pixel) { (*pixel)++; } return *this; }
     /// Increment every pixel value in this set
-    inline CPixelView & operator++(int DUMMY_ARG) { for(iterator pixel = begin(), _end = end(); pixel != _end; ++pixel) { (*pixel)++; } return *this; }
+    inline CPixelView & operator++(int DUMMY_ARG) {
+        FASTLED_UNUSED(DUMMY_ARG);
+        for(iterator pixel = begin(), _end = end(); pixel != _end; ++pixel) {
+            (*pixel)++;
+        }
+        return *this;
+    }
 
     /// Decrement every pixel value in this set
     inline CPixelView & operator--() { for(iterator pixel = begin(), _end = end(); pixel != _end; ++pixel) { (*pixel)--; } return *this; }
     /// Decrement every pixel value in this set
-    inline CPixelView & operator--(int DUMMY_ARG) { for(iterator pixel = begin(), _end = end(); pixel != _end; ++pixel) { (*pixel)--; } return *this; }
+    inline CPixelView & operator--(int DUMMY_ARG) {
+        FASTLED_UNUSED(DUMMY_ARG);
+        for(iterator pixel = begin(), _end = end(); pixel != _end; ++pixel) {
+            (*pixel)--;
+        }
+        return *this;
+    }
 
     /// Divide every LED by the given value
     inline CPixelView & operator/=(uint8_t d) { for(iterator pixel = begin(), _end = end(); pixel != _end; ++pixel) { (*pixel) /= d; } return *this; }
@@ -190,7 +289,7 @@ public:
     /// @param color the color to fill with
     inline CPixelView & fill_solid(const PIXEL_TYPE & color) { *this = color; return *this; }
     /// @copydoc CPixelView::fill_solid(const PIXEL_TYPE&)
-    inline CPixelView & fill_solid(const CHSV & color) { if(dir>0) { *this = color; return *this; } }
+    inline CPixelView & fill_solid(const CHSV & color) { *this = color; return *this; }
 
     /// Fill all of the LEDs with a rainbow of colors.
     /// @param initialhue the starting hue for the rainbow
@@ -198,9 +297,9 @@ public:
     /// @see ::fill_rainbow(struct CRGB*, int, uint8_t, uint8_t)
     inline CPixelView & fill_rainbow(uint8_t initialhue, uint8_t deltahue=5) {
         if(dir >= 0) {
-            ::fill_rainbow(leds,len,initialhue,deltahue);
+            FUNCTION_FILL_RAINBOW(leds,len,initialhue,deltahue);
         } else {
-            ::fill_rainbow(leds+len+1,-len,initialhue,deltahue);
+            FUNCTION_FILL_RAINBOW(leds + len + 1, -len, initialhue - deltahue * (len+1), -deltahue);
         }
         return *this;
     }
@@ -210,11 +309,11 @@ public:
     /// @param endcolor the end color for the gradient
     /// @param directionCode the direction to travel around the color wheel
     /// @see ::fill_gradient(T*, uint16_t, const CHSV&, const CHSV&, TGradientDirectionCode)
-    inline CPixelView & fill_gradient(const CHSV & startcolor, const CHSV & endcolor, TGradientDirectionCode directionCode  = SHORTEST_HUES) {
+    inline CPixelView & fill_gradient(const CHSV & startcolor, const CHSV & endcolor, TGradientDirectionCode directionCode  = fl::SHORTEST_HUES) {
         if(dir >= 0) {
-            ::fill_gradient(leds,len,startcolor, endcolor, directionCode);
+            FUNCTION_FILL_GRADIENT(leds,len,startcolor, endcolor, directionCode);
         } else {
-            ::fill_gradient(leds + len + 1, (-len), endcolor, startcolor, directionCode);
+            FUNCTION_FILL_GRADIENT(leds + len + 1, (-len), endcolor, startcolor, directionCode);
         }
         return *this;
     }
@@ -225,11 +324,11 @@ public:
     /// @param c3 the end color for the gradient
     /// @param directionCode the direction to travel around the color wheel
     /// @see ::fill_gradient(T*, uint16_t, const CHSV&, const CHSV&, const CHSV&, TGradientDirectionCode)
-    inline CPixelView & fill_gradient(const CHSV & c1, const CHSV & c2, const CHSV &  c3, TGradientDirectionCode directionCode = SHORTEST_HUES) {
+    inline CPixelView & fill_gradient(const CHSV & c1, const CHSV & c2, const CHSV &  c3, TGradientDirectionCode directionCode = fl::SHORTEST_HUES) {
         if(dir >= 0) {
-            ::fill_gradient(leds, len, c1, c2, c3, directionCode);
+            FUNCTION_FILL_GRADIENT3(leds, len, c1, c2, c3, directionCode);
         } else {
-            ::fill_gradient(leds + len + 1, -len, c3, c2, c1, directionCode);
+            FUNCTION_FILL_GRADIENT3(leds + len + 1, -len, c3, c2, c1, directionCode);
         }
         return *this;
     }
@@ -241,11 +340,11 @@ public:
     /// @param c4 the end color for the gradient
     /// @param directionCode the direction to travel around the color wheel
     /// @see ::fill_gradient(T*, uint16_t, const CHSV&, const CHSV&, const CHSV&, const CHSV&, TGradientDirectionCode)
-    inline CPixelView & fill_gradient(const CHSV & c1, const CHSV & c2, const CHSV & c3, const CHSV & c4, TGradientDirectionCode directionCode = SHORTEST_HUES) {
+    inline CPixelView & fill_gradient(const CHSV & c1, const CHSV & c2, const CHSV & c3, const CHSV & c4, TGradientDirectionCode directionCode = fl::SHORTEST_HUES) {
         if(dir >= 0) {
-            ::fill_gradient(leds, len, c1, c2, c3, c4, directionCode);
+            FUNCTION_FILL_GRADIENT4(leds, len, c1, c2, c3, c4, directionCode);
         } else {
-            ::fill_gradient(leds + len + 1, -len, c4, c3, c2, c1, directionCode);
+            FUNCTION_FILL_GRADIENT4(leds + len + 1, -len, c4, c3, c2, c1, directionCode);
         }
         return *this;
     }
@@ -255,11 +354,12 @@ public:
     /// @param endcolor the end color for the gradient
     /// @param directionCode the direction to travel around the color wheel
     /// @see ::fill_gradient_RGB(CRGB*, uint16_t, const CRGB&, const CRGB&)
-    inline CPixelView & fill_gradient_RGB(const PIXEL_TYPE & startcolor, const PIXEL_TYPE & endcolor, TGradientDirectionCode directionCode  = SHORTEST_HUES) {
+    inline CPixelView & fill_gradient_RGB(const PIXEL_TYPE & startcolor, const PIXEL_TYPE & endcolor, TGradientDirectionCode directionCode  = fl::SHORTEST_HUES) {
+        FASTLED_UNUSED(directionCode); // TODO: why is this not used?
         if(dir >= 0) {
-            ::fill_gradient_RGB(leds,len,startcolor, endcolor);
+            FUNCTION_FILL_GRADIENT_RGB(leds,len,startcolor, endcolor);
         } else {
-            ::fill_gradient_RGB(leds + len + 1, (-len), endcolor, startcolor);
+            FUNCTION_FILL_GRADIENT_RGB(leds + len + 1, (-len), endcolor, startcolor);
         }
         return *this;
     }
@@ -271,9 +371,9 @@ public:
     /// @see ::fill_gradient_RGB(CRGB*, uint16_t, const CRGB&, const CRGB&, const CRGB&)
     inline CPixelView & fill_gradient_RGB(const PIXEL_TYPE & c1, const PIXEL_TYPE & c2, const PIXEL_TYPE &  c3) {
         if(dir >= 0) {
-            ::fill_gradient_RGB(leds, len, c1, c2, c3);
+            FUNCTION_FILL_GRADIENT_RGB3(leds, len, c1, c2, c3);
         } else {
-            ::fill_gradient_RGB(leds + len + 1, -len, c3, c2, c1);
+            FUNCTION_FILL_GRADIENT_RGB3(leds + len + 1, -len, c3, c2, c1);
         }
         return *this;
     }
@@ -286,9 +386,9 @@ public:
     /// @see ::fill_gradient_RGB(CRGB*, uint16_t, const CRGB&, const CRGB&, const CRGB&, const CRGB&)
     inline CPixelView & fill_gradient_RGB(const PIXEL_TYPE & c1, const PIXEL_TYPE & c2, const PIXEL_TYPE & c3, const PIXEL_TYPE & c4) {
         if(dir >= 0) {
-            ::fill_gradient_RGB(leds, len, c1, c2, c3, c4);
+            FUNCTION_FILL_GRADIENT_RGB4(leds, len, c1, c2, c3, c4);
         } else {
-            ::fill_gradient_RGB(leds + len + 1, -len, c4, c3, c2, c1);
+            FUNCTION_FILL_GRADIENT_RGB4(leds + len + 1, -len, c4, c3, c2, c1);
         }
         return *this;
     }
@@ -297,13 +397,13 @@ public:
     /// @param overlay the color to blend in
     /// @param amountOfOverlay the fraction of overlay to blend in
     /// @see ::nblend(CRGB&, const CRGB&, fract8)
-    inline CPixelView & nblend(const PIXEL_TYPE & overlay, fract8 amountOfOverlay) { for(iterator pixel = begin(), _end = end(); pixel != _end; ++pixel) { ::nblend((*pixel), overlay, amountOfOverlay); } return *this; }
+    inline CPixelView & nblend(const PIXEL_TYPE & overlay, fract8 amountOfOverlay) { for(iterator pixel = begin(), _end = end(); pixel != _end; ++pixel) { FUNCTION_NBLEND((*pixel), overlay, amountOfOverlay); } return *this; }
 
     /// Destructively blend another set of LEDs into this one
     /// @param rhs the set of LEDs to blend into this set
     /// @param amountOfOverlay the fraction of each color in the other set to blend in
     /// @see ::nblend(CRGB&, const CRGB&, fract8)
-    inline CPixelView & nblend(const CPixelView & rhs, fract8 amountOfOverlay) { for(iterator pixel = begin(), rhspixel = rhs.begin(), _end = end(), rhs_end = rhs.end(); (pixel != _end) && (rhspixel != rhs_end); ++pixel, ++rhspixel) { ::nblend((*pixel), (*rhspixel), amountOfOverlay); } return *this; }
+    inline CPixelView & nblend(const CPixelView & rhs, fract8 amountOfOverlay) { for(iterator pixel = begin(), rhspixel = rhs.begin(), _end = end(), rhs_end = rhs.end(); (pixel != _end) && (rhspixel != rhs_end); ++pixel, ++rhspixel) { FUNCTION_NBLEND((*pixel), (*rhspixel), amountOfOverlay); } return *this; }
 
     /// One-dimensional blur filter
     /// @param blur_amount the amount of blur to apply
@@ -311,9 +411,9 @@ public:
     /// @see ::blur1d(CRGB*, uint16_t, fract8)
     inline CPixelView & blur1d(fract8 blur_amount) {
         if(dir >= 0) {
-            ::blur1d(leds, len, blur_amount);
+            FUNCTION_BLUR1D(leds, len, blur_amount);
         } else {
-            ::blur1d(leds + len + 1, -len, blur_amount);
+            FUNCTION_BLUR1D(leds + len + 1, -len, blur_amount);
         }
         return *this;
     }
@@ -323,9 +423,9 @@ public:
     /// @see ::napplyGamma_video(CRGB&, float)
     inline CPixelView & napplyGamma_video(float gamma) {
         if(dir >= 0) {
-            ::napplyGamma_video(leds, len, gamma);
+            FUNCTION_NAPPLY_GAMMA(leds, len, gamma);
         } else {
-            ::napplyGamma_video(leds + len + 1, -len, gamma);
+            FUNCTION_NAPPLY_GAMMA(leds + len + 1, -len, gamma);
         }
         return *this;
     }
@@ -337,9 +437,9 @@ public:
     /// @see ::napplyGamma_video(CRGB&, float, float, float)
     inline CPixelView & napplyGamma_video(float gammaR, float gammaG, float gammaB) {
         if(dir >= 0) {
-            ::napplyGamma_video(leds, len, gammaR, gammaG, gammaB);
+            FUNCTION_NAPPLY_GAMMA_RGB(leds, len, gammaR, gammaG, gammaB);
         } else {
-            ::napplyGamma_video(leds + len + 1, -len, gammaR, gammaG, gammaB);
+            FUNCTION_NAPPLY_GAMMA_RGB(leds + len + 1, -len, gammaR, gammaG, gammaB);
         }
         return *this;
     }
@@ -360,21 +460,21 @@ public:
 
     public:
         /// Copy constructor
-        __attribute__((always_inline)) inline pixelset_iterator_base(const pixelset_iterator_base & rhs) : leds(rhs.leds), dir(rhs.dir) {}
+        FASTLED_FORCE_INLINE pixelset_iterator_base(const pixelset_iterator_base & rhs) : leds(rhs.leds), dir(rhs.dir) {}
 
         /// Base constructor
         /// @tparam the type of the LED array data
         /// @param _leds pointer to LED array
         /// @param _dir direction of LED array
-        __attribute__((always_inline)) inline pixelset_iterator_base(T * _leds, const char _dir) : leds(_leds), dir(_dir) {}
+        FASTLED_FORCE_INLINE pixelset_iterator_base(T * _leds, const char _dir) : leds(_leds), dir(_dir) {}
 
-        __attribute__((always_inline)) inline pixelset_iterator_base& operator++() { leds += dir; return *this; }  ///< Increment LED pointer in data direction
-        __attribute__((always_inline)) inline pixelset_iterator_base operator++(int) { pixelset_iterator_base tmp(*this); leds += dir; return tmp; }  ///< @copydoc operator++()
+        FASTLED_FORCE_INLINE pixelset_iterator_base& operator++() { leds += dir; return *this; }  ///< Increment LED pointer in data direction
+        FASTLED_FORCE_INLINE pixelset_iterator_base operator++(int) { pixelset_iterator_base tmp(*this); leds += dir; return tmp; }  ///< @copydoc operator++()
 
-        __attribute__((always_inline)) inline bool operator==(pixelset_iterator_base & other) const { return leds == other.leds; /* && set==other.set; */ }    ///< Check if iterator is at the same position
-        __attribute__((always_inline)) inline bool operator!=(pixelset_iterator_base & other) const { return leds != other.leds; /* || set != other.set; */ }  ///< Check if iterator is not at the same position
+        FASTLED_FORCE_INLINE bool operator==(pixelset_iterator_base & other) const { return leds == other.leds; /* && set==other.set; */ }    ///< Check if iterator is at the same position
+        FASTLED_FORCE_INLINE bool operator!=(pixelset_iterator_base & other) const { return leds != other.leds; /* || set != other.set; */ }  ///< Check if iterator is not at the same position
 
-        __attribute__((always_inline)) inline PIXEL_TYPE& operator*() const { return *leds; }  ///< Dereference operator, to get underlying pointer to the LEDs
+        FASTLED_FORCE_INLINE PIXEL_TYPE& operator*() const { return *leds; }  ///< Dereference operator, to get underlying pointer to the LEDs
     };
 
     typedef pixelset_iterator_base<PIXEL_TYPE> iterator;              ///< Iterator helper type for this class
@@ -392,26 +492,38 @@ public:
     /// @} Iterator
 };
 
-/// CPixelView for CRGB arrays
-typedef CPixelView<CRGB> CRGBSet;
-
-/// Retrieve a pointer to a CRGB array, using a CRGBSet and an LED offset
-__attribute__((always_inline))
-inline CRGB *operator+(const CRGBSet & pixels, int offset) { return (CRGB*)pixels + offset; }
+FASTLED_FORCE_INLINE
+CRGB *operator+(const CRGBSet & pixels, int offset) {
+    return (CRGB*)pixels + offset;
+}
 
 
 /// A version of CPixelView<CRGB> with an included array of CRGB LEDs
 /// @tparam SIZE the number of LEDs to include in the array
 template<int SIZE>
 class CRGBArray : public CPixelView<CRGB> {
-    CRGB rawleds[SIZE];  ///< the LED data
+    CRGB rawleds[SIZE] = {0};  ///< the LED data
 
 public:
     CRGBArray() : CPixelView<CRGB>(rawleds, SIZE) {}
     using CPixelView::operator=;
+    CRGB* get() { return &rawleds[0]; }
+    const CRGB* get() const {  return &rawleds[0]; }
+    size_t size() const { return SIZE; }
 };
 
 /// @} PixelSet
 
+FASTLED_NAMESPACE_END
 
-#endif
+#undef FUNCTION_FILL_RAINBOW
+#undef FUNCTION_NAPPLY_GAMMA
+#undef FUNCTION_NAPPLY_GAMMA_RGB
+#undef FUNCTION_BLUR1D
+#undef FUNCTION_FILL_GRADIENT
+#undef FUNCTION_FILL_GRADIENT3
+#undef FUNCTION_FILL_GRADIENT4
+#undef FUNCTION_NBLEND
+#undef FUNCTION_FILL_GRADIENT_RGB
+#undef FUNCTION_FILL_GRADIENT_RGB3
+#undef FUNCTION_FILL_GRADIENT_RGB4

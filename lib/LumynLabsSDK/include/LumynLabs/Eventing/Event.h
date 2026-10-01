@@ -8,130 +8,59 @@
 
 #pragma once
 
-#include "EventType.h"
 #include <cstdint>
 #include <cstring>
+
+#include "EventType.h"
+#include "lumyn/domain/event/Event.h"
 
 namespace LumynLabs
 {
 
-  /**
-   * @brief Cause of system disable
-   */
-  enum class DisabledCause : uint8_t
-  {
-    NoHeartbeat, ///< No heartbeat received
-    Manual,      ///< Manually disabled
-    EStop,       ///< Emergency stop
-    Restart      ///< Restarting
-  };
+  /** @brief Cause of system disable */
+  using DisabledCause = lumyn::event::DisabledCause;
 
-  /**
-   * @brief Connection type
-   */
-  enum class ConnectionType : uint8_t
-  {
-    USB,    ///< Standard USB
-    WebUSB, ///< WebUSB
-    I2C,    ///< I2C bus
-    CAN,    ///< CAN bus
-    UART,   ///< Serial UART
-  };
+  /** @brief Connection type */
+  using ConnectionType = lumyn::event::ConnectionType;
 
-  /**
-   * @brief Custom event data
-   *
-   * For user-defined events using EventType::Custom
-   */
-  struct CustomEventData
-  {
-    uint8_t type;     ///< User-defined type identifier
-    uint8_t data[16]; ///< Custom payload
-    uint8_t length;   ///< Actual length of data used
-  };
+  /** @brief Custom event data: a type, up to 16 bytes, and their length */
+  using CustomEventData = lumyn::event::CustomInfo;
 
-  /**
-   * @brief Pin interrupt event data
-   */
-  struct PinInterruptData
-  {
-    uint8_t pin; ///< GPIO pin that triggered
-    void *param; ///< User parameter
-  };
+  /** @brief Pin interrupt event data: the pin and a user parameter */
+  using PinInterruptData = lumyn::event::PinInterruptInfo;
 
-  /**
-   * @brief Heartbeat event data
-   */
-  struct HeartBeatData
-  {
-    Status status;        ///< Current system status
-    uint8_t enabled;      ///< Enabled flag
-    uint8_t connectedUSB; ///< USB connection status
-    uint8_t canOK;        ///< CAN bus status
-  };
+  /** @brief Heartbeat event data */
+  using HeartBeatData = lumyn::event::HeartBeatInfo;
 
-  /**
-   * @brief Event data union
-   *
-   * Contains event-specific data. Use the appropriate field
-   * based on the event type.
-   */
-  union EventData
-  {
-    DisabledCause disabledCause;
-    ConnectionType connectionType;
-    CustomEventData custom;
-    PinInterruptData pinInterrupt;
-    HeartBeatData heartBeat;
-  };
+  /** @brief Event data union; the member to read depends on the event type */
+  using EventData = lumyn::event::EventData;
 
   /**
    * @brief Event structure
    *
-   * Represents a system event. Received via event queues.
+   * The type is `evt.header.type` and the data is `evt.header.data`. An event
+   * may carry extra text: see hasExtraMessage() and getExtraMessage().
    */
-  struct Event
-  {
-    EventType type; ///< Event type
-    EventData data; ///< Event-specific data
-
-    /**
-     * @brief Get optional extra message
-     * @return Pointer to message data, or nullptr
-     */
-    const uint8_t *getExtraMessage() const;
-
-    /**
-     * @brief Get extra message length
-     * @return Message length in bytes
-     */
-    uint16_t getExtraMessageLength() const;
-
-    /**
-     * @brief Check if event has extra message
-     */
-    bool hasExtraMessage() const;
-  };
+  using Event = lumyn::event::Event;
 
   /**
    * @brief Create a custom event
    *
-   * Helper to create EventType::Custom events.
-   *
-   * @param customType User-defined type ID
-   * @param data Custom data payload
-   * @param length Data length (max 16)
-   * @return Event configured as custom event
+   * @param customType User-defined type identifier
+   * @param data Optional payload, at most 16 bytes; longer data is cut
+   * @param length Payload length
+   * @return The event, ready to publish
    */
   inline Event createCustomEvent(uint8_t customType, const uint8_t *data = nullptr, uint8_t length = 0)
   {
     Event evt;
-    evt.type = EventType::Custom;
-    evt.data.custom.type = customType;
-    evt.data.custom.length = (length > 16) ? 16 : length;
+    evt.header.type = EventType::Custom;
+    auto &custom = evt.header.data.custom;
+    custom.type = customType;
+    custom.length = (length > sizeof(custom.data)) ? sizeof(custom.data) : length;
     if (data && length > 0)
     {
-      std::memcpy(evt.data.custom.data, data, evt.data.custom.length);
+      std::memcpy(custom.data, data, custom.length);
     }
     return evt;
   }

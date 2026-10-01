@@ -1,3 +1,5 @@
+#pragma once
+
 /// @file fastspi_bitbang.h
 /// Software SPI (aka bit-banging) support
 
@@ -7,6 +9,8 @@
 #include "FastLED.h"
 
 #include "fastled_delay.h"
+#include "fl/force_inline.h"
+#include "fl/int.h"
 
 FASTLED_NAMESPACE_BEGIN
 
@@ -19,7 +23,7 @@ FASTLED_NAMESPACE_BEGIN
 /// @tparam SPI_SPEED speed of the bus. Determines the delay times between pin writes.
 /// @note Although this is named with the "AVR" prefix, this will work on any platform. Theoretically. 
 /// @todo Replace the select pin definition with a set of pins, to allow using mux hardware for routing in the future. 
-template <uint8_t DATA_PIN, uint8_t CLOCK_PIN, uint32_t SPI_SPEED>
+template <uint8_t DATA_PIN, uint8_t CLOCK_PIN, fl::u32 SPI_SPEED>
 class AVRSoftwareSPIOutput {
 	// The data types for pointers to the pin port - typedef'd here from the ::Pin definition because on AVR these
 	// are pointers to 8 bit values, while on ARM they are 32 bit
@@ -67,7 +71,7 @@ public:
 	static void writeBytePostWait(uint8_t b) __attribute__((always_inline)) { writeByte(b); wait(); }
 
 	/// Write a word (two bytes) over SPI. 
-	static void writeWord(uint16_t w) __attribute__((always_inline)) { writeByte(w>>8); writeByte(w&0xFF); }
+	static void writeWord(fl::u16 w) __attribute__((always_inline)) { writeByte(w>>8); writeByte(w&0xFF); }
 
 	/// Write a single byte over SPI. 
 	/// Naive implelentation, simply calls writeBit() on the 8 bits in the byte.
@@ -175,7 +179,7 @@ public:
 
 private:
 	/// Write the BIT'th bit out via SPI, setting the data pin then strobing the clock, using the passed in pin registers to accelerate access if needed
-	template <uint8_t BIT> __attribute__((always_inline)) inline static void writeBit(uint8_t b, clock_ptr_t clockpin, data_ptr_t datapin) {
+	template <uint8_t BIT> FASTLED_FORCE_INLINE static void writeBit(uint8_t b, clock_ptr_t clockpin, data_ptr_t datapin) {
 		if(b & (1 << BIT)) {
 			FastPin<DATA_PIN>::hi(datapin);
 			FastPin<CLOCK_PIN>::hi(clockpin); CLOCK_HI_DELAY;
@@ -190,7 +194,7 @@ private:
 
 	/// The version of writeBit() to use when clock and data are on separate pins with precomputed values for setting
 	/// the clock and data pins
-	template <uint8_t BIT> __attribute__((always_inline)) inline static void writeBit(uint8_t b, clock_ptr_t clockpin, data_ptr_t datapin,
+	template <uint8_t BIT> FASTLED_FORCE_INLINE static void writeBit(uint8_t b, clock_ptr_t clockpin, data_ptr_t datapin,
 													data_t hival, data_t loval, clock_t hiclock, clock_t loclock) {
 		// // only need to explicitly set clock hi if clock and data are on different ports
 		if(b & (1 << BIT)) {
@@ -207,7 +211,7 @@ private:
 
 	/// The version of writeBit() to use when clock and data are on the same port with precomputed values for the various
 	/// combinations
-	template <uint8_t BIT> __attribute__((always_inline)) inline static void writeBit(uint8_t b, data_ptr_t clockdatapin,
+	template <uint8_t BIT> FASTLED_FORCE_INLINE static void writeBit(uint8_t b, data_ptr_t clockdatapin,
 													data_t datahiclockhi, data_t dataloclockhi,
 													data_t datahiclocklo, data_t dataloclocklo) {
 #if 0
@@ -348,7 +352,8 @@ public:
 	/// @tparam D Per-byte modifier class, e.g. ::DATA_NOP
 	/// @tparam RGB_ORDER the rgb ordering for the LED data (e.g. what order red, green, and blue data is written out in)
 	/// @param pixels a ::PixelController with the LED data and modifier options
-	template <uint8_t FLAGS, class D, EOrder RGB_ORDER>  __attribute__((noinline)) void writePixels(PixelController<RGB_ORDER> pixels) {
+	template <uint8_t FLAGS, class D, EOrder RGB_ORDER>  __attribute__((noinline)) void writePixels(PixelController<RGB_ORDER> pixels, void* context = NULL) {
+		FASTLED_UNUSED(context);
 		select();
 		int len = pixels.mLen;
 

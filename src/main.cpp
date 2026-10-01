@@ -80,7 +80,7 @@ public:
    * Optional: Handle incoming commands.
    * Override this if your module can receive commands.
    */
-  bool pushData(ArduinoJson::JsonVariantConst json) override
+  bool handleReceivedJson(ArduinoJson::JsonVariantConst json) override
   {
     // Example: Handle a "reset" command
     if (json["command"].is<const char *>())

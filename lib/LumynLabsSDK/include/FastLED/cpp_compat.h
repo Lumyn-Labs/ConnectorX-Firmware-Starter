@@ -1,3 +1,5 @@
+#pragma once
+
 /// @file cpp_compat.h
 /// Compatibility functions based on C++ version
 
@@ -21,14 +23,6 @@
 // things that we can turn on if we're in a C++11 environment
 #endif
 
-#if __cplusplus < 201703L
-#define FASTLED_REGISTER register
-#else
-  #ifdef FASTLED_REGISTER
-    #undef FASTLED_REGISTER
-  #endif
-#define FASTLED_REGISTER
-
-#endif
+#include "fl/register.h"
 
 #endif

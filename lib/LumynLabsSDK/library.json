@@ -42,6 +42,7 @@
     "SPI": "*",
     "Wire": "*",
     "EEPROM": "*",
+    "bblanchon/ArduinoJson": "^7.0.0",
     "adafruit/Adafruit TinyUSB Library": "^3.4.0"
   },
   "export": {
