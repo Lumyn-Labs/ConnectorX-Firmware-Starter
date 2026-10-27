@@ -33,7 +33,7 @@ jobs:
             ### Quick Start (Ready to Go!)
             ```bash
             git clone https://github.com/${{ github.repository }}.git
-            cd ConnectorX-Fimware-Starter
+            cd ConnectorX-Firmware-Starter
             pio run -t upload
             ```
             
@@ -41,8 +41,8 @@ jobs:
             
             ### Recovery Firmware
             Download `firmware.uf2` below to restore your ConnectorX to factory defaults:
-            1. Hold BOOT button while pressing RESET
-            2. Drag `firmware.uf2` to the mounted drive
+            1. Hold BOOTSEL, press and release RST, then release BOOTSEL
+            2. Copy `firmware.uf2` to the drive that appears
             
             See [README.md](https://github.com/${{ github.repository }}/blob/main/README.md) for custom module development.
           artifacts: "firmware/*.uf2"
