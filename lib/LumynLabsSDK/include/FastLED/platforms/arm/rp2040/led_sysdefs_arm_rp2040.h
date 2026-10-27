@@ -13,8 +13,8 @@
 #define FASTLED_ARM_M0_PLUS
 
 // TODO: PORT SPI TO HW
-//#define FASTLED_SPI_BYTE_ONLY
-#define FASTLED_FORCE_SOFTWARE_SPI
+#define FASTLED_SPI_BYTE_ONLY
+// #define FASTLED_FORCE_SOFTWARE_SPI
 // Force FAST_SPI_INTERRUPTS_WRITE_PINS on becuase two cores running
 // simultaneously could lead to data races on GPIO.
 // This could potentially be optimised by adding a mask to FastPin's set and
@@ -74,7 +74,7 @@ typedef volatile uint32_t RwReg;
 
 // Default to disabling M0 assembly clockless implementation
 #ifndef FASTLED_RP2040_CLOCKLESS_M0_FALLBACK
-#define FASTLED_RP2040_CLOCKLESS_M0_FALLBACK 1
+// #define FASTLED_RP2040_CLOCKLESS_M0_FALLBACK 1
 #endif
 
 // SPI pin defs for old SDK ver
@@ -100,4 +100,4 @@ static uint32_t saved_interrupt_status;
 #define sei() (restore_interrupts(saved_interrupt_status))
 #endif
 
-#endif // __INC_LED_SYSDEFS_ARM_RP2040_H
+#endif  // __INC_LED_SYSDEFS_ARM_RP2040_H

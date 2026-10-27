@@ -49,7 +49,8 @@ public:
     // auto& i2c = peripherals().getI2C();
     // i2c.beginTransmission(0x40);
     // if (i2c.endTransmission() != 0) {
-    //   return LumynLabs::ModuleError::initError("Sensor not found");
+    //   return LumynLabs::ModuleError::error(
+    //       LumynLabs::ModuleErrorType::CommunicationFail);
     // }
 
     Serial.println("MySensor initialized!");
@@ -80,7 +81,7 @@ public:
    * Optional: Handle incoming commands.
    * Override this if your module can receive commands.
    */
-  bool pushData(ArduinoJson::JsonVariantConst json) override
+  bool handleReceivedJson(ArduinoJson::JsonVariantConst json) override
   {
     // Example: Handle a "reset" command
     if (json["command"].is<const char *>())
@@ -104,8 +105,8 @@ private:
 
 void setup()
 {
-  // Initialize the system (networking, display, etc.)
-  bool success = LumynLabs::System::init();
+  // Start the board's services; true sends logs to the second USB serial port.
+  bool success = LumynLabs::System::init(true);
   if (!success)
   {
     Serial.println("System init failed");
@@ -136,9 +137,10 @@ void setup()
   Serial.printf("ConnectorX ready! SDK v%s\n", LumynLabs::getSDKVersion());
 }
 
-void loop() { delay(10000); }
+// The SDK runs everything in its own tasks, so loop() ends its task and
+// frees the task's 4 KB stack for the heap. To run code in a loop instead,
+// replace this with your loop() and keep in mind the 4 KB it costs.
+void loop() { vTaskDelete(NULL); }
 
-// Second core setup, safest to do nothing here
-void setup1() {}
-
-void loop1() { delay(10000); }
+// No setup1() or loop1(): defining either starts a second task with another
+// 4 KB stack.

@@ -1,6 +1,6 @@
 {
   "name": "LumynLabs-cx",
-  "version": "1.0.0",
+  "version": "4.4.0",
   "description": "Lumyn Labs SDK for ConnectorX",
   "keywords": [
     "connectorx",
@@ -16,11 +16,7 @@
       "url": "https://lumynlabs.com"
     }
   ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/lumynlabs/connectorx-sdk"
-  },
-  "license": "Proprietary",
+  "license": "UNLICENSED",
   "frameworks": [
     "arduino"
   ],
@@ -42,7 +38,8 @@
     "SPI": "*",
     "Wire": "*",
     "EEPROM": "*",
-    "adafruit/Adafruit TinyUSB Library": "^3.4.0"
+    "bblanchon/ArduinoJson": "7.4.3",
+    "Adafruit TinyUSB Library": "*"
   },
   "export": {
     "include": [

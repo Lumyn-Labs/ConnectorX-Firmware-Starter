@@ -1,0 +1,96 @@
+/*
+ * C++ names for the matrix text options of the ConnectorX LED commands. The
+ * values, and the C names (CONNECTORX_MATRIX_TEXT_*), come from the
+ * ConnectorX domain.
+ */
+#pragma once
+
+#include <stdint.h>
+
+#include "lumyn/connectorx_types.h"
+#include "lumyn/internal_names.h"
+
+#ifdef __cplusplus
+namespace lumyn::led {
+
+using AnimationColor = connectorx_rgb_t;
+
+enum class MatrixTextScrollDirection : uint8_t {
+  LEFT = CONNECTORX_MATRIX_TEXT_SCROLL_DIRECTION_LEFT,
+  RIGHT = CONNECTORX_MATRIX_TEXT_SCROLL_DIRECTION_RIGHT,
+  UP = CONNECTORX_MATRIX_TEXT_SCROLL_DIRECTION_UP,
+  DOWN = CONNECTORX_MATRIX_TEXT_SCROLL_DIRECTION_DOWN,
+  NONE = CONNECTORX_MATRIX_TEXT_SCROLL_DIRECTION_NONE,
+};
+
+enum class MatrixTextFont : uint8_t {
+  BUILTIN = CONNECTORX_MATRIX_TEXT_FONT_BUILTIN,
+  TINY_3X3 = CONNECTORX_MATRIX_TEXT_FONT_TINY3X3,
+  PICOPIXEL = CONNECTORX_MATRIX_TEXT_FONT_PICOPIXEL,
+  TOM_THUMB = CONNECTORX_MATRIX_TEXT_FONT_TOM_THUMB,
+  ORG_01 = CONNECTORX_MATRIX_TEXT_FONT_ORG_01,
+  FREE_MONO_9 = CONNECTORX_MATRIX_TEXT_FONT_FREE_MONO_9,
+  FREE_MONO_BOLD_9 = CONNECTORX_MATRIX_TEXT_FONT_FREE_MONO_BOLD_9,
+  FREE_SANS_9 = CONNECTORX_MATRIX_TEXT_FONT_FREE_SANS_9,
+  FREE_SANS_BOLD_9 = CONNECTORX_MATRIX_TEXT_FONT_FREE_SANS_BOLD_9,
+  FREE_SERIF_9 = CONNECTORX_MATRIX_TEXT_FONT_FREE_SERIF_9,
+  FREE_SERIF_BOLD_9 = CONNECTORX_MATRIX_TEXT_FONT_FREE_SERIF_BOLD_9,
+  FREE_MONO_12 = CONNECTORX_MATRIX_TEXT_FONT_FREE_MONO_12,
+  FREE_MONO_BOLD_12 = CONNECTORX_MATRIX_TEXT_FONT_FREE_MONO_BOLD_12,
+  FREE_SANS_12 = CONNECTORX_MATRIX_TEXT_FONT_FREE_SANS_12,
+  FREE_SANS_BOLD_12 = CONNECTORX_MATRIX_TEXT_FONT_FREE_SANS_BOLD_12,
+  FREE_SERIF_12 = CONNECTORX_MATRIX_TEXT_FONT_FREE_SERIF_12,
+  FREE_SERIF_BOLD_12 = CONNECTORX_MATRIX_TEXT_FONT_FREE_SERIF_BOLD_12,
+  FREE_MONO_18 = CONNECTORX_MATRIX_TEXT_FONT_FREE_MONO_18,
+  FREE_MONO_BOLD_18 = CONNECTORX_MATRIX_TEXT_FONT_FREE_MONO_BOLD_18,
+  FREE_SANS_18 = CONNECTORX_MATRIX_TEXT_FONT_FREE_SANS_18,
+  FREE_SANS_BOLD_18 = CONNECTORX_MATRIX_TEXT_FONT_FREE_SANS_BOLD_18,
+  FREE_SERIF_18 = CONNECTORX_MATRIX_TEXT_FONT_FREE_SERIF_18,
+  FREE_SERIF_BOLD_18 = CONNECTORX_MATRIX_TEXT_FONT_FREE_SERIF_BOLD_18,
+  FREE_MONO_24 = CONNECTORX_MATRIX_TEXT_FONT_FREE_MONO_24,
+  FREE_MONO_BOLD_24 = CONNECTORX_MATRIX_TEXT_FONT_FREE_MONO_BOLD_24,
+  FREE_SANS_24 = CONNECTORX_MATRIX_TEXT_FONT_FREE_SANS_24,
+  FREE_SANS_BOLD_24 = CONNECTORX_MATRIX_TEXT_FONT_FREE_SANS_BOLD_24,
+  FREE_SERIF_24 = CONNECTORX_MATRIX_TEXT_FONT_FREE_SERIF_24,
+  FREE_SERIF_BOLD_24 = CONNECTORX_MATRIX_TEXT_FONT_FREE_SERIF_BOLD_24,
+};
+
+enum class MatrixTextAlign : uint8_t {
+  LEFT = CONNECTORX_MATRIX_TEXT_ALIGN_LEFT,
+  CENTER = CONNECTORX_MATRIX_TEXT_ALIGN_CENTER,
+  RIGHT = CONNECTORX_MATRIX_TEXT_ALIGN_RIGHT,
+};
+
+// The matrix text flags, one field per bit of the wire's flags byte.
+struct MatrixTextFlags {
+  bool smoothScroll = false;
+  bool showBackground = false;
+  bool pingPong = false;
+  bool noScroll = false;
+
+  uint8_t toByte() const {
+    return (smoothScroll ? CONNECTORX_MATRIX_TEXT_FLAG_SMOOTH_SCROLL : 0) |
+           (showBackground ? CONNECTORX_MATRIX_TEXT_FLAG_SHOW_BACKGROUND : 0) |
+           (pingPong ? CONNECTORX_MATRIX_TEXT_FLAG_PING_PONG : 0) |
+           (noScroll ? CONNECTORX_MATRIX_TEXT_FLAG_NO_SCROLL : 0);
+  }
+
+  static MatrixTextFlags fromByte(uint8_t flags) {
+    return {(flags & CONNECTORX_MATRIX_TEXT_FLAG_SMOOTH_SCROLL) != 0,
+            (flags & CONNECTORX_MATRIX_TEXT_FLAG_SHOW_BACKGROUND) != 0,
+            (flags & CONNECTORX_MATRIX_TEXT_FLAG_PING_PONG) != 0,
+            (flags & CONNECTORX_MATRIX_TEXT_FLAG_NO_SCROLL) != 0};
+  }
+};
+
+}  // namespace lumyn::led
+
+namespace lumyn::internal::Command::LED {
+LUMYN_INTERNAL_NAME(AnimationColor, lumyn::led::AnimationColor, "lumyn::internal::Command::LED::AnimationColor")
+LUMYN_INTERNAL_NAME(MatrixTextScrollDirection, lumyn::led::MatrixTextScrollDirection,
+                    "lumyn::internal::Command::LED::MatrixTextScrollDirection")
+LUMYN_INTERNAL_NAME(MatrixTextFont, lumyn::led::MatrixTextFont, "lumyn::internal::Command::LED::MatrixTextFont")
+LUMYN_INTERNAL_NAME(MatrixTextAlign, lumyn::led::MatrixTextAlign, "lumyn::internal::Command::LED::MatrixTextAlign")
+LUMYN_INTERNAL_NAME(MatrixTextFlags, lumyn::led::MatrixTextFlags, "lumyn::internal::Command::LED::MatrixTextFlags")
+}  // namespace lumyn::internal::Command::LED
+#endif
