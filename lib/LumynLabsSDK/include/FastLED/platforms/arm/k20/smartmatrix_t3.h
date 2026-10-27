@@ -3,7 +3,6 @@
 
 #ifdef SmartMatrix_h
 #include <SmartMatrix.h>
-#include "fl/namespace.h"
 
 FASTLED_NAMESPACE_BEGIN
 

@@ -2,9 +2,7 @@
 #define __INC_LED_SYSDEFS_ARM_D21_H
 
 
-#ifndef FASTLED_ARM
-#error "FASTLED_ARM must be defined before including this header. Ensure platforms/arm/is_arm.h is included first."
-#endif
+#define FASTLED_ARM
 #define FASTLED_ARM_M0_PLUS
 
 #ifndef INTERRUPT_THRESHOLD

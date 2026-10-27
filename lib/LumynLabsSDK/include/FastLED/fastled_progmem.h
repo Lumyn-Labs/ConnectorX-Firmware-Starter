@@ -1,16 +1,7 @@
-#pragma once
+#ifndef __INC_FL_PROGMEM_H
+#define __INC_FL_PROGMEM_H
 
-
-#include "fl/namespace.h"
-
-#if defined(__EMSCRIPTEN__) || defined(FASTLED_TESTING) || defined(FASTLED_STUB_IMPL)
-#include "platforms/null_progmem.h"
-#elif defined(ESP8266)
-#include "platforms/esp/8266/progmem_esp8266.h"
-#else
-
-
-
+#include "FastLED.h"
 
 /// @file fastled_progmem.h
 /// Wrapper definitions to allow seamless use of PROGMEM in environments that have it
@@ -25,6 +16,7 @@
 /// Whether or not pgmspace.h is \#included is separately
 /// controllable by FASTLED_INCLUDE_PGMSPACE, if needed.
 
+FASTLED_NAMESPACE_BEGIN
 
 
 // This block is used for Doxygen documentation generation,
@@ -32,6 +24,7 @@
 // included without a defined platform
 #ifdef FASTLED_DOXYGEN
 #define FASTLED_USE_PROGMEM 1
+#define FL_ALIGN_PROGMEM  __attribute__ ((aligned (4)))
 #endif
 
 /// @def FASTLED_USE_PROGMEM
@@ -40,7 +33,7 @@
 /// and the FL_PGM_* accessors to the Arduino equivalents.
 
 
-#if (FASTLED_USE_PROGMEM == 1) || defined(FASTLED_DOXYGEN)
+#if FASTLED_USE_PROGMEM == 1
 #ifndef FASTLED_INCLUDE_PGMSPACE
 #define FASTLED_INCLUDE_PGMSPACE 1
 #endif
@@ -51,7 +44,6 @@
 
 /// PROGMEM keyword for storage
 #define FL_PROGMEM                PROGMEM
-
 
 /// @name PROGMEM Read Functions
 /// Functions for reading data from PROGMEM memory.
@@ -86,7 +78,11 @@
 // If FASTLED_USE_PROGMEM is 0 or undefined,
 // we'll use regular memory (RAM) access.
 
-#include "platforms/null_progmem.h"
+//empty PROGMEM simulation
+#define FL_PROGMEM
+#define FL_PGM_READ_BYTE_NEAR(x)  (*((const  uint8_t*)(x)))
+#define FL_PGM_READ_WORD_NEAR(x)  (*((const uint16_t*)(x)))
+#define FL_PGM_READ_DWORD_NEAR(x) (*((const uint32_t*)(x)))
 
 #endif
 
@@ -100,12 +96,13 @@
 /// palette code uses 'read dword', and now uses this macro
 /// to make sure that gradient palettes are 4-byte aligned.
 
-#ifndef FL_ALIGN_PROGMEM
-#if defined(FASTLED_ARM) || defined(ESP32) || defined(FASTLED_DOXYGEN)
+#if defined(FASTLED_ARM) || defined(ESP32) || defined(ESP8266)
 #define FL_ALIGN_PROGMEM  __attribute__ ((aligned (4)))
 #else
 #define FL_ALIGN_PROGMEM
 #endif
-#endif
 
-#endif  // defined(__EMSCRIPTEN__) || defined(FASTLED_TESTING) || defined(FASTLED_STUB_IMPL)
+
+FASTLED_NAMESPACE_END
+
+#endif

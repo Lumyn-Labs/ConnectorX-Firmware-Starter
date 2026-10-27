@@ -11,16 +11,14 @@
 
 #define FASTLED_SPI_BYTE_ONLY
 
-#ifndef FASTLED_ARM
-#error "FASTLED_ARM must be defined before including this header. Ensure platforms/arm/is_arm.h is included first."
-#endif
+#define FASTLED_ARM
 #define FASTLED_ARM_M0
 
 #ifndef F_CPU
 #define F_CPU 16000000
 #endif
 
-#include "fl/stdint.h"
+#include <stdint.h>
 #include <nrf51.h>
 #include <core_cm0.h>
 

@@ -1,4 +1,7 @@
-#pragma once
+#ifndef __INC_FASTLED_CONFIG_H
+#define __INC_FASTLED_CONFIG_H
+
+#include "FastLED.h"
 
 /// @file fastled_config.h
 /// Contains definitions that can be used to configure FastLED at compile time
@@ -86,3 +89,4 @@
 #define FASTLED_USE_GLOBAL_BRIGHTNESS 0
 #endif
 
+#endif

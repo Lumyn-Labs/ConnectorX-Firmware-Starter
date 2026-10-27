@@ -2,9 +2,7 @@
 #define __INC_LED_SYSDEFS_ARM_KL26_H
 
 #define FASTLED_TEENSYLC
-#ifndef FASTLED_ARM
-#error "FASTLED_ARM must be defined before including this header. Ensure platforms/arm/is_arm.h is included first."
-#endif
+#define FASTLED_ARM
 #define FASTLED_ARM_M0_PLUS
 
 #ifndef INTERRUPT_THRESHOLD
@@ -15,7 +13,7 @@
 
 // Default to allowing interrupts
 #ifndef FASTLED_ALLOW_INTERRUPTS
-#define FASTLED_ALLOW_INTERRUPTS 1
+// #define FASTLED_ALLOW_INTERRUPTS 1
 #endif
 
 #if FASTLED_ALLOW_INTERRUPTS == 1
@@ -24,11 +22,6 @@
 
 #if (F_CPU == 96000000)
 #define CLK_DBL 1
-#endif
-
-// Define VARIANT_MCK for timing calculations
-#ifndef VARIANT_MCK
-#define VARIANT_MCK F_CPU
 #endif
 
 // Get some system include files

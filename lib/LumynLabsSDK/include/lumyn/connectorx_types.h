@@ -44,6 +44,17 @@ typedef enum connectorx_animation {
   CONNECTORX_ANIMATION_LAVA = 24,
   CONNECTORX_ANIMATION_PLASMA = 25,
   CONNECTORX_ANIMATION_HEARTBEAT = 26,
+  CONNECTORX_ANIMATION_STROBE = 27,
+  CONNECTORX_ANIMATION_WIPE = 28,
+  CONNECTORX_ANIMATION_FIREWORKS = 29,
+  CONNECTORX_ANIMATION_AURORA = 30,
+  CONNECTORX_ANIMATION_CONVERGE = 31,
+  CONNECTORX_ANIMATION_STARFIELD = 32,
+  CONNECTORX_ANIMATION_SNAKE = 33,
+  CONNECTORX_ANIMATION_DIGITAL_RAIN = 34,
+  CONNECTORX_ANIMATION_DROPS = 35,
+  CONNECTORX_ANIMATION_MONITOR = 36,
+  CONNECTORX_ANIMATION_BOUNCING_BALLS = 37,
 } connectorx_animation_t;
 
 typedef enum connectorx_matrix_text_scroll_direction {
@@ -101,11 +112,21 @@ typedef enum connectorx_matrix_text_align {
 
 // Bits of the flags of setMatrixText and setMatrixTextGroup.
 typedef enum connectorx_matrix_text_flag {
+  // Scroll a pixel at a time, not a character.
   CONNECTORX_MATRIX_TEXT_FLAG_SMOOTH_SCROLL = 1,
+  // Fill behind the text with the background color.
   CONNECTORX_MATRIX_TEXT_FLAG_SHOW_BACKGROUND = 2,
+  // Scroll back and forth instead of wrapping around.
   CONNECTORX_MATRIX_TEXT_FLAG_PING_PONG = 4,
+  // Hold the text still, placed by its alignment.
   CONNECTORX_MATRIX_TEXT_FLAG_NO_SCROLL = 8,
 } connectorx_matrix_text_flag_t;
+
+// Which pixels a ledFrame request reads.
+typedef enum connectorx_led_frame_source {
+  CONNECTORX_LED_FRAME_SOURCE_ZONE = 0,
+  CONNECTORX_LED_FRAME_SOURCE_OUTPUT = 1,
+} connectorx_led_frame_source_t;
 
 // The system error types, with ConnectorX's names for the application slots.
 typedef enum connectorx_error_type {

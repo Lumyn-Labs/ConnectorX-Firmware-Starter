@@ -296,6 +296,65 @@ struct Event {
 
 static_assert(sizeof(Event) <= 32, "Event should be compact (~24-28 bytes)");
 
+// A wire message's length: it fills all its bytes when it's that long, with
+// no terminator.
+template <size_t N>
+inline size_t messageLength(const char (&message)[N]) {
+  const void* end = memchr(message, '\0', N);
+  return end ? static_cast<size_t>(static_cast<const char*>(end) - message) : N;
+}
+
+// The event as the C API shows it. Its extra_message is NULL: each caller
+// copies the extra message the way its API owns it.
+inline lumyn_event_t toCEvent(const Event& in) {
+  lumyn_event_t out;
+  memset(&out, 0, sizeof(out));
+  out.type = static_cast<lumyn_event_type_t>(in.header.type);
+  const EventData& data = in.header.data;
+  // The C enums are wider than the packed wire enums, so each field is
+  // converted rather than the union copied.
+  switch (in.header.type) {
+    case EventType::Disabled:
+      out.data.disabled.cause = static_cast<lumyn_disabled_cause_t>(data.disabled.cause);
+      break;
+    case EventType::Connected:
+      out.data.connected.type = static_cast<lumyn_connection_type_t>(data.connected.type);
+      break;
+    case EventType::Disconnected:
+      out.data.disconnected.type = static_cast<lumyn_connection_type_t>(data.disconnected.type);
+      break;
+    case EventType::Error:
+      out.data.error.type = static_cast<lumyn_error_type_t>(data.error.type);
+      memcpy(out.data.error.message, data.error.message, messageLength(data.error.message));
+      break;
+    case EventType::FatalError:
+      out.data.fatal_error.type = static_cast<lumyn_fatal_error_type_t>(data.fatalError.type);
+      memcpy(out.data.fatal_error.message, data.fatalError.message,
+             messageLength(data.fatalError.message));
+      break;
+    case EventType::RegisteredEntity:
+      out.data.registered_entity.id = data.registeredEntity.id;
+      break;
+    case EventType::Custom:
+      out.data.custom.type = data.custom.type;
+      out.data.custom.length = data.custom.length;
+      memcpy(out.data.custom.data, data.custom.data, sizeof(out.data.custom.data));
+      break;
+    case EventType::PinInterrupt:
+      out.data.pin_interrupt.pin = data.pinInterrupt.pin;
+      break;
+    case EventType::HeartBeat:
+      out.data.heartbeat.status = static_cast<lumyn_status_t>(data.heartBeat.status);
+      out.data.heartbeat.enabled = data.heartBeat.enabled;
+      out.data.heartbeat.connected_usb = data.heartBeat.connectedUSB;
+      out.data.heartbeat.can_ok = data.heartBeat.canOK;
+      break;
+    default:
+      break;
+  }
+  return out;
+}
+
 }  // namespace lumyn::event
 
 namespace lumyn::internal::Eventing

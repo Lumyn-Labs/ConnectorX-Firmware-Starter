@@ -4,11 +4,11 @@
 // Auto-generated for ConnectorX - DO NOT EDIT
 // =============================================================================
 
-// SDK Version
-#define CX_SDK_VERSION_MAJOR 1
-#define CX_SDK_VERSION_MINOR 0
+// SDK version: the firmware release the SDK was built from.
+#define CX_SDK_VERSION_MAJOR 4
+#define CX_SDK_VERSION_MINOR 4
 #define CX_SDK_VERSION_PATCH 0
-#define CX_SDK_VERSION_STRING "1.0.0"
+#define CX_SDK_VERSION_STRING "4.4.0"
 
 // Board Variant Identifier
 #define CX_SDK_VARIANT "cx"

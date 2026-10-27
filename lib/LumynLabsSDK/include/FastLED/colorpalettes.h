@@ -1,11 +1,8 @@
-#pragma once
-
 #ifndef __INC_COLORPALETTES_H
 #define __INC_COLORPALETTES_H
 
-// #include "FastLED.h"
+#include "FastLED.h"
 #include "colorutils.h"
-#include "fastled_progmem.h"
 
 /// @file colorpalettes.h
 /// Declarations for the predefined color palettes supplied by FastLED.
@@ -13,9 +10,8 @@
 // Have Doxygen ignore these declarations
 /// @cond
 
-// For historical reasons, TProgmemRGBPalette and others may be
-// defined in sketches. Therefore we treat these as special
-// and bind to the global namespace.
+FASTLED_NAMESPACE_BEGIN
+
 extern const TProgmemRGBPalette16 CloudColors_p FL_PROGMEM;
 extern const TProgmemRGBPalette16 LavaColors_p FL_PROGMEM;
 extern const TProgmemRGBPalette16 OceanColors_p FL_PROGMEM;
@@ -33,6 +29,8 @@ extern const TProgmemRGBPalette16 HeatColors_p FL_PROGMEM;
 
 
 DECLARE_GRADIENT_PALETTE( Rainbow_gp);
+
+FASTLED_NAMESPACE_END
 
 /// @endcond
 

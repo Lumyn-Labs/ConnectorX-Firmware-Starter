@@ -48,13 +48,17 @@ struct Color {
     } else {
       sat = (255 * delta) / maxVal;
 
+      // 43 steps of hue to each sixth of the wheel, as FromHSV. A negative
+      // hue wraps around to the top.
+      int h;
       if (maxVal == r) {
-        hue = 43 * ((g - b) / delta);
+        h = 43 * (g - b) / delta;
       } else if (maxVal == g) {
-        hue = 85 + 43 * ((b - r) / delta);
+        h = 85 + 43 * (b - r) / delta;
       } else {
-        hue = 171 + 43 * ((r - g) / delta);
+        h = 171 + 43 * (r - g) / delta;
       }
+      hue = static_cast<uint8_t>((h + 256) % 256);
     }
   }
 

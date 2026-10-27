@@ -1,21 +1,7 @@
-#pragma once
-
 #ifndef __INC_LIB8TION_H
 #define __INC_LIB8TION_H
 
 #include "FastLED.h"
-#include "lib8tion/types.h"
-#include "fl/deprecated.h"
-
-#include "fl/compiler_control.h"
-
-FL_DISABLE_WARNING_PUSH
-FL_DISABLE_WARNING_UNUSED_PARAMETER
-FL_DISABLE_WARNING_RETURN_TYPE
-FL_DISABLE_WARNING_IMPLICIT_INT_CONVERSION
-FL_DISABLE_WARNING_FLOAT_CONVERSION
-FL_DISABLE_WARNING_SIGN_CONVERSION
-
 
 #ifndef __INC_LED_SYSDEFS_H
 #error WTH?  led_sysdefs needs to be included first
@@ -25,19 +11,179 @@ FL_DISABLE_WARNING_SIGN_CONVERSION
 /// Fast, efficient 8-bit math functions specifically
 /// designed for high-performance LED programming. 
 
-#include "fl/stdint.h"
-#include "lib8tion/lib8static.h"
-#include "lib8tion/qfx.h"
-#include "lib8tion/memmove.h"
-#include "lib8tion/config.h"
-#include "fl/ease.h"
 
+FASTLED_NAMESPACE_BEGIN
+
+
+#include <stdint.h>
+
+/// Define a LIB8TION member function as static inline with an "unused" attribute
+#define LIB8STATIC __attribute__ ((unused)) static inline
+/// Define a LIB8TION member function as always static inline
+#define LIB8STATIC_ALWAYS_INLINE __attribute__ ((always_inline)) static inline
 
 #if !defined(__AVR__)
 #include <string.h>
 // for memmove, memcpy, and memset if not defined here
 #endif // end of !defined(__AVR__)
 
+#if defined(__arm__)
+
+#if defined(FASTLED_TEENSY3)
+// Can use Cortex M4 DSP instructions
+#define QADD8_C 0
+#define QADD7_C 0
+#define QADD8_ARM_DSP_ASM 1
+#define QADD7_ARM_DSP_ASM 1
+#else
+// Generic ARM
+#define QADD8_C 1
+#define QADD7_C 1
+#endif // end of defined(FASTLED_TEENSY3)
+
+#define QSUB8_C 1
+#define SCALE8_C 1
+#define SCALE16BY8_C 1
+#define SCALE16_C 1
+#define ABS8_C 1
+#define MUL8_C 1
+#define QMUL8_C 1
+#define ADD8_C 1
+#define SUB8_C 1
+#define EASE8_C 1
+#define AVG8_C 1
+#define AVG8R_C 1
+#define AVG7_C 1
+#define AVG16_C 1
+#define AVG16R_C 1
+#define AVG15_C 1
+#define BLEND8_C 1
+
+// end of #if defined(__arm__)
+
+#elif defined(ARDUINO_ARCH_APOLLO3)
+
+// Default to using the standard C functions for now
+#define QADD8_C 1
+#define QADD7_C 1
+#define QSUB8_C 1
+#define SCALE8_C 1
+#define SCALE16BY8_C 1
+#define SCALE16_C 1
+#define ABS8_C 1
+#define MUL8_C 1
+#define QMUL8_C 1
+#define ADD8_C 1
+#define SUB8_C 1
+#define EASE8_C 1
+#define AVG8_C 1
+#define AVG8R_C 1
+#define AVG7_C 1
+#define AVG16_C 1
+#define AVG16R_C 1
+#define AVG15_C 1
+#define BLEND8_C 1
+
+// end of #elif defined(ARDUINO_ARCH_APOLLO3)
+
+#elif defined(__AVR__)
+
+// AVR ATmega and friends Arduino
+
+#define QADD8_C 0
+#define QADD7_C 0
+#define QSUB8_C 0
+#define ABS8_C 0
+#define ADD8_C 0
+#define SUB8_C 0
+#define AVG8_C 0
+#define AVG8R_C 0
+#define AVG7_C 0
+#define AVG16_C 0
+#define AVG16R_C 0
+#define AVG15_C 0
+
+#define QADD8_AVRASM 1
+#define QADD7_AVRASM 1
+#define QSUB8_AVRASM 1
+#define ABS8_AVRASM 1
+#define ADD8_AVRASM 1
+#define SUB8_AVRASM 1
+#define AVG8_AVRASM 1
+#define AVG8R_AVRASM 1
+#define AVG7_AVRASM 1
+#define AVG16_AVRASM 1
+#define AVG16R_AVRASM 1
+#define AVG15_AVRASM 1
+
+// Note: these require hardware MUL instruction
+//       -- sorry, ATtiny!
+#if !defined(LIB8_ATTINY)
+#define SCALE8_C 0
+#define SCALE16BY8_C 0
+#define SCALE16_C 0
+#define MUL8_C 0
+#define QMUL8_C 0
+#define EASE8_C 0
+#define BLEND8_C 0
+#define SCALE8_AVRASM 1
+#define SCALE16BY8_AVRASM 1
+#define SCALE16_AVRASM 1
+#define MUL8_AVRASM 1
+#define QMUL8_AVRASM 1
+#define EASE8_AVRASM 1
+#define CLEANUP_R1_AVRASM 1
+#define BLEND8_AVRASM 1
+#else
+// On ATtiny, we just use C implementations
+#define SCALE8_C 1
+#define SCALE16BY8_C 1
+#define SCALE16_C 1
+#define MUL8_C 1
+#define QMUL8_C 1
+#define EASE8_C 1
+#define BLEND8_C 1
+#define SCALE8_AVRASM 0
+#define SCALE16BY8_AVRASM 0
+#define SCALE16_AVRASM 0
+#define MUL8_AVRASM 0
+#define QMUL8_AVRASM 0
+#define EASE8_AVRASM 0
+#define BLEND8_AVRASM 0
+#endif // end of !defined(LIB8_ATTINY)
+
+// end of #elif defined(__AVR__)
+
+#else
+
+// Doxygen: ignore these macros
+/// @cond
+
+// unspecified architecture, so
+// no ASM, everything in C
+#define QADD8_C 1
+#define QADD7_C 1
+#define QSUB8_C 1
+#define SCALE8_C 1
+#define SCALE16BY8_C 1
+#define SCALE16_C 1
+#define ABS8_C 1
+#define MUL8_C 1
+#define QMUL8_C 1
+#define ADD8_C 1
+#define SUB8_C 1
+#define EASE8_C 1
+#define AVG8_C 1
+#define AVG8R_C 1
+#define AVG7_C 1
+#define AVG16_C 1
+#define AVG16R_C 1
+#define AVG15_C 1
+#define BLEND8_C 1
+
+/// @endcond
+
+#endif
 
 /// @defgroup lib8tion Fast Math Functions
 /// Fast, efficient 8-bit math functions specifically
@@ -231,6 +377,78 @@ FL_DISABLE_WARNING_SIGN_CONVERSION
 /// @{
 
 
+///////////////////////////////////////////////////////////////////////
+///
+/// @defgroup FractionalTypes Fixed-Point Fractional Types. 
+/// Types for storing fractional data. 
+///
+/// * ::sfract7 should be interpreted as signed 128ths.
+/// * ::fract8 should be interpreted as unsigned 256ths.
+/// * ::sfract15 should be interpreted as signed 32768ths.
+/// * ::fract16 should be interpreted as unsigned 65536ths.
+///
+/// Example: if a fract8 has the value "64", that should be interpreted
+///          as 64/256ths, or one-quarter.
+///
+/// accumXY types should be interpreted as X bits of integer,
+///         and Y bits of fraction.  
+/// E.g., ::accum88 has 8 bits of int, 8 bits of fraction
+///
+/// @{
+
+/// ANSI: unsigned short _Fract. 
+/// Range is 0 to 0.99609375 in steps of 0.00390625.  
+/// Should be interpreted as unsigned 256ths.
+typedef uint8_t   fract8;
+
+/// ANSI: signed short _Fract. 
+/// Range is -0.9921875 to 0.9921875 in steps of 0.0078125.  
+/// Should be interpreted as signed 128ths.
+typedef int8_t    sfract7;
+
+/// ANSI: unsigned _Fract.
+/// Range is 0 to 0.99998474121 in steps of 0.00001525878.  
+/// Should be interpreted as unsigned 65536ths.
+typedef uint16_t  fract16;
+
+/// ANSI: signed _Fract.
+/// Range is -0.99996948242 to 0.99996948242 in steps of 0.00003051757.  
+/// Should be interpreted as signed 32768ths.
+typedef int16_t   sfract15;
+
+
+typedef uint16_t  accum88;    ///< ANSI: unsigned short _Accum. 8 bits int, 8 bits fraction
+typedef int16_t   saccum78;   ///< ANSI: signed   short _Accum. 7 bits int, 8 bits fraction
+typedef uint32_t  accum1616;  ///< ANSI: signed         _Accum. 16 bits int, 16 bits fraction
+typedef int32_t   saccum1516; ///< ANSI: signed         _Accum. 15 bits int, 16 bits fraction
+typedef uint16_t  accum124;   ///< no direct ANSI counterpart. 12 bits int, 4 bits fraction
+typedef int32_t   saccum114;  ///< no direct ANSI counterpart. 1 bit int, 14 bits fraction
+
+
+/// typedef for IEEE754 "binary32" float type internals
+/// @see https://en.wikipedia.org/wiki/IEEE_754
+typedef union {
+    uint32_t i;  ///< raw value, as an integer
+    float    f;  ///< raw value, as a float
+    struct {
+        uint32_t mantissa: 23;  ///< 23-bit mantissa
+        uint32_t exponent:  8;  ///< 8-bit exponent
+        uint32_t signbit:   1;  ///< sign bit
+    };
+    struct {
+        uint32_t mant7 :  7;  ///< @todo Doc: what is this for?
+        uint32_t mant16: 16;  ///< @todo Doc: what is this for?
+        uint32_t exp_  :  8;  ///< @todo Doc: what is this for?
+        uint32_t sb_   :  1;  ///< @todo Doc: what is this for?
+    };
+    struct {
+        uint32_t mant_lo8 : 8;  ///< @todo Doc: what is this for?
+        uint32_t mant_hi16_exp_lo1 : 16;  ///< @todo Doc: what is this for?
+        uint32_t sb_exphi7 : 8;  ///< @todo Doc: what is this for?
+    };
+} IEEE754binary32_t;
+
+/// @} FractionalTypes
 
 
 #include "lib8tion/math8.h"
@@ -243,7 +461,7 @@ FL_DISABLE_WARNING_SIGN_CONVERSION
 
 
 
-FASTLED_NAMESPACE_BEGIN
+
 
 
 ///////////////////////////////////////////////////////////////////////
@@ -256,7 +474,7 @@ FASTLED_NAMESPACE_BEGIN
 /// Conversion from 16-bit fixed point (::sfract15) to IEEE754 32-bit float.
 LIB8STATIC float sfract15ToFloat( sfract15 y)
 {
-    return y / 32768.0f;
+    return y / 32768.0;
 }
 
 /// Conversion from IEEE754 float in the range (-1,1) to 16-bit fixed point (::sfract15).
@@ -264,13 +482,34 @@ LIB8STATIC float sfract15ToFloat( sfract15 y)
 /// representable range is 0.99996948242 to -0.99996948242, in steps of 0.00003051757.
 LIB8STATIC sfract15 floatToSfract15( float f)
 {
-    return static_cast<sfract15>(f * 32768.0f);
+    return f * 32768.0;
 }
 
 /// @} FloatConversions
 
 
 
+///////////////////////////////////////////////////////////////////////
+///
+/// @defgroup FastMemory Fast Memory Functions for AVR
+/// Alternatives to memmove, memcpy, and memset that are
+/// faster on AVR than standard avr-libc 1.8. 
+/// @{
+
+#if defined(__AVR__) || defined(FASTLED_DOXYGEN)
+extern "C" {
+void * memmove8( void * dst, const void * src, uint16_t num );  ///< Faster alternative to memmove() on AVR
+void * memcpy8 ( void * dst, const void * src, uint16_t num )  __attribute__ ((noinline));  ///< Faster alternative to memcpy() on AVR
+void * memset8 ( void * ptr, uint8_t value, uint16_t num ) __attribute__ ((noinline)) ;  ///< Faster alternative to memset() on AVR
+}
+#else
+// on non-AVR platforms, these names just call standard libc.
+#define memmove8 memmove
+#define memcpy8 memcpy
+#define memset8 memset
+#endif
+
+/// @} FastMemory
 
 
 ///////////////////////////////////////////////////////////////////////
@@ -458,44 +697,20 @@ LIB8STATIC uint8_t ease8InOutQuad(uint8_t val) {
 #error "No implementation for ease8InOutQuad available."
 #endif
 
+/// 16-bit quadratic ease-in / ease-out function. 
+/// C implementation at this point.
 LIB8STATIC uint16_t ease16InOutQuad( uint16_t i)
 {
-    // This is the legacy version, there is a slightly more accurate version in fl/ease.cpp
-    // with fl::easeInOutQuad16. However the difference is minimal.
-    //
-    // 16-bit quadratic ease-in / ease-out function
     uint16_t j = i;
-    if (j & 0x8000) {
+    if( j & 0x8000 ) {
         j = 65535 - j;
     }
-    uint16_t jj = scale16(j, j);
+    uint16_t jj  = scale16( j, j);
     uint16_t jj2 = jj << 1;
-    if (i & 0x8000) {
+    if( i & 0x8000 ) {
         jj2 = 65535 - jj2;
     }
     return jj2;
-}
-
-LIB8STATIC uint16_t ease16InOutCubic(uint16_t i)  {
-    // This function produces wrong results, use fl::easeInOutCubic16 instead
-    //
-    // 16-bit cubic ease-in / ease-out function
-    // Equivalent to ease8InOutCubic() but for 16-bit values
-    // Formula: 3(x^2) - 2(x^3) applied with proper ease-in-out curve
-
-    // Apply the cubic formula directly, similar to the 8-bit version
-    // scale16(a, b) computes (a * b) / 65536
-    uint32_t ii = scale16(i, i);   // i^2 scaled to 16-bit
-    uint32_t iii = scale16(ii, i); // i^3 scaled to 16-bit
-
-    // Apply cubic formula: 3x^2 - 2x^3
-    uint32_t r1 = (3 * ii) - (2 * iii);
-
-    // Clamp result to 16-bit range
-    if (r1 > 65535) {
-        return 65535;
-    }
-    return (uint16_t)r1;
 }
 
 
@@ -671,6 +886,57 @@ LIB8STATIC uint8_t squarewave8( uint8_t in, uint8_t pulsewidth=128)
 }
 
 /// @} WaveformGenerators
+
+
+
+/// @addtogroup FractionalTypes
+/// @{
+
+/// Template class for representing fractional ints.
+/// @tparam T underlying type for data storage
+/// @tparam F number of fractional bits
+/// @tparam I number of integer bits
+template<class T, int F, int I> class qfx {
+    T i:I;  ///< Integer value of number
+    T f:F;  ///< Fractional value of number
+public:
+    /// Constructor, storing a float as a fractional int
+    qfx(float fx) { i = fx; f = (fx-i) * (1<<F); }
+    /// Constructor, storing a fractional int directly
+    qfx(uint8_t _i, uint8_t _f) {i=_i; f=_f; }
+
+    /// Multiply the fractional int by a value
+    uint32_t operator*(uint32_t v) { return (v*i) + ((v*f)>>F); }
+    /// @copydoc operator*(uint32_t)
+    uint16_t operator*(uint16_t v) { return (v*i) + ((v*f)>>F); }
+    /// @copydoc operator*(uint32_t)
+    int32_t operator*(int32_t v) { return (v*i) + ((v*f)>>F); }
+    /// @copydoc operator*(uint32_t)
+    int16_t operator*(int16_t v) { return (v*i) + ((v*f)>>F); }
+#if defined(FASTLED_ARM) | defined(FASTLED_RISCV) | defined(FASTLED_APOLLO3)
+    /// @copydoc operator*(uint32_t)
+    int operator*(int v) { return (v*i) + ((v*f)>>F); }
+#endif
+};
+
+template<class T, int F, int I> static uint32_t operator*(uint32_t v, qfx<T,F,I> & q) { return q * v; }
+template<class T, int F, int I> static uint16_t operator*(uint16_t v, qfx<T,F,I> & q) { return q * v; }
+template<class T, int F, int I> static int32_t operator*(int32_t v, qfx<T,F,I> & q) { return q * v; }
+template<class T, int F, int I> static int16_t operator*(int16_t v, qfx<T,F,I> & q) { return q * v; }
+#if defined(FASTLED_ARM) | defined(FASTLED_RISCV) | defined(FASTLED_APOLLO3)
+template<class T, int F, int I> static int operator*(int v, qfx<T,F,I> & q) { return q * v; }
+#endif
+
+/// A 4.4 integer (4 bits integer, 4 bits fraction)
+typedef qfx<uint8_t, 4,4> q44;
+/// A 6.2 integer (6 bits integer, 2 bits fraction)
+typedef qfx<uint8_t, 6,2> q62;
+/// A 8.8 integer (8 bits integer, 8 bits fraction)
+typedef qfx<uint16_t, 8,8> q88;
+/// A 12.4 integer (12 bits integer, 4 bits fraction)
+typedef qfx<uint16_t, 12,4> q124;
+
+/// @}
 
 /// @} lib8tion (excluding the timekeeping functions from the nested group)
 
@@ -1043,72 +1309,7 @@ INSTANTIATE_EVERY_N_TIME_PERIODS(CEveryNHours,uint8_t,hours8);
 
 /// Alias for CEveryNMillis
 #define CEveryNMilliseconds CEveryNMillis
-
-/// Create the CEveryNMillisDynamic class for dynamic millisecond intervals
-class CEveryNMillisDynamic {
-public:
-    uint32_t mPrevTrigger;
-    uint32_t mPeriod;
-
-    CEveryNMillisDynamic(uint32_t period) : mPeriod(period) { reset(); };
-    uint32_t getTime() { return GET_MILLIS(); };
-    uint32_t getPeriod() const { return mPeriod; };
-    uint32_t getElapsed() { return getTime() - mPrevTrigger; }
-    uint32_t getRemaining() { return getPeriod() - getElapsed(); }
-    uint32_t getLastTriggerTime() { return mPrevTrigger; }
-    bool ready() {
-        bool isReady = (getElapsed() >= getPeriod());
-        if( isReady ) { reset(); }
-        return isReady;
-    }
-    void reset() { mPrevTrigger = getTime(); };
-    void trigger() { mPrevTrigger = getTime() - getPeriod(); };
-    void setPeriod(uint32_t period) { mPeriod = period; }
-
-    operator bool() { return ready(); }
-};
 /// @} CEveryNTime Base Classes
-
-
-
-// ————————————————————————————————————————————————
-// Random‐interval version of EVERY_N_MILLISECONDS:
-// on each trigger, pick the next period randomly in [MIN..MAX].
-// ————————————————————————————————————————————————
-class CEveryNMillisRandom {
-public:
-    uint32_t mPrevTrigger;
-    uint32_t mPeriod;
-    uint32_t mMinPeriod;
-    uint32_t mMaxPeriod;
-
-    CEveryNMillisRandom(uint32_t minPeriod, uint32_t maxPeriod)
-      : mMinPeriod(minPeriod), mMaxPeriod(maxPeriod)
-    {
-        computeNext();
-        reset();
-    }
-
-    void computeNext() {
-        // random16(x) returns [0..x-1], so this yields MIN..MAX
-        uint32_t range = mMaxPeriod - mMinPeriod + 1;
-        mPeriod = mMinPeriod + random16(range);
-    }
-
-    uint32_t getTime() const { return GET_MILLIS(); }
-
-    bool ready() {
-        uint32_t now = getTime();
-        if (now - mPrevTrigger >= mPeriod) {
-            mPrevTrigger = now;
-            computeNext();
-            return true;
-        }
-        return false;
-    }
-
-    void reset() { mPrevTrigger = getTime(); }
-};
 
 #else
 
@@ -1222,24 +1423,6 @@ typedef CEveryNTimePeriods<uint8_t,hours8> CEveryNHours;
 /// Alias for ::EVERY_N_MILLIS_I
 #define EVERY_N_MILLISECONDS_I(NAME,N) EVERY_N_MILLIS_I(NAME,N)
 
-/// Checks whether to execute a block of code every N milliseconds, where N is determined dynamically
-#define EVERY_N_MILLISECONDS_DYNAMIC(PERIOD_FUNC) EVERY_N_MILLISECONDS_DYNAMIC_I(CONCAT_MACRO(__dynamic_millis_timer, __COUNTER__ ), (PERIOD_FUNC))
-
-/// Checks whether to execute a block of code every N milliseconds, where N is determined dynamically, using a custom instance name
-#define EVERY_N_MILLISECONDS_DYNAMIC_I(NAME, PERIOD_FUNC) \
-    static CEveryNMillisDynamic NAME(1); \
-    NAME.setPeriod(PERIOD_FUNC); \
-    if( NAME )
-
-
-#define EVERY_N_MILLISECONDS_RANDOM(MIN, MAX)                                 \
-    EVERY_N_MILLISECONDS_RANDOM_I(                                           \
-        CONCAT_MACRO(_permRand, __COUNTER__), MIN, MAX)
-
-#define EVERY_N_MILLISECONDS_RANDOM_I(NAME, MIN, MAX)                        \
-    static CEveryNMillisRandom NAME(MIN, MAX);                               \
-    if (NAME.ready())
-
 /// @} Every_N
 /// @} Timekeeping
 
@@ -1256,5 +1439,3 @@ typedef CEveryNTimePeriods<uint8_t,hours8> CEveryNHours;
 FASTLED_NAMESPACE_END
 
 #endif
-
-FL_DISABLE_WARNING_POP

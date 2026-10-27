@@ -18,33 +18,49 @@ namespace LumynLabs
 {
 
   /**
-   * @brief State counting mode for animations
+   * @brief One zone's running animation
+   *
+   * An effect is made for one zone's size and keeps whatever state it
+   * needs. It moves in fixed ticks of its own time, kTicksPerSecond to the
+   * second; a command's delay sets how fast that time runs
+   * (speed = defaultDelay / delay), so an effect never reads a clock.
+   *
+   * - step() moves the effect on by one tick.
+   * - draw(frame) draws the effect as it is now on a cleared frame: the
+   *   zone's pixels row by row from the top left. A strip is one row.
+   *
+   * Its random numbers (rnd(), chance(), randomBelow()) are the zone's own,
+   * so the same commands draw the same frames.
    */
-  using AnimationStateMode = lumyn::internal::Animation::StateMode;
+  using lumyn::led::Effect;
 
   /**
-   * @brief Animation frame callback
-   *
-   * Called for each animation frame to update LED states.
-   *
-   * @param strip Pointer to LED color array (modify this to set LED colors)
-   * @param color The requested animation color
-   * @param state Current animation state (0 to stateCount-1)
-   * @param count Total number of LEDs in the strip
-   * @return true if the updated colors should be pushed to hardware
-   *
-   * Example:
-   * @code
-   * bool myAnimation(Color* strip, Color color, uint16_t state, uint16_t count) {
-   *   // Simple chase animation
-   *   for (uint16_t i = 0; i < count; i++) {
-   *     strip[i] = (i == state) ? color : Color::Black();
-   *   }
-   *   return true; // Show the update
-   * }
-   * @endcode
+   * @brief What an effect draws on: pixels, width, height, color
    */
-  using AnimationFrameCallback = lumyn::internal::Animation::AnimationFrameCallback;
+  using lumyn::led::Frame;
+
+  /// Ticks of an effect's own time in a second, at its default delay.
+  using lumyn::led::kTicksPerSecond;
+
+  /**
+   * @brief Flags for AnimationInstance::flags, combined with |
+   *
+   * - kMatrixOnly: needs a matrix, at least two rows and two columns.
+   * - kOwnsReverse: reversed changes the effect itself, rather than flipping
+   *   its pixels.
+   * - kEnds: played one-shot, it stops after one cycle. Others loop.
+   * - kStill: its frame changes only when its color does.
+   */
+  using lumyn::led::AnimationFlag;
+  using lumyn::led::kEnds;
+  using lumyn::led::kMatrixOnly;
+  using lumyn::led::kOwnsReverse;
+  using lumyn::led::kStill;
+
+  /// Makes an effect of type E for AnimationInstance::make. E is made with
+  /// the zone's width and height, or with no arguments if it doesn't need
+  /// them.
+  using lumyn::led::makeEffect;
 
   /**
    * @brief Animation definition
@@ -53,29 +69,36 @@ namespace LumynLabs
    *
    * Example:
    * @code
-   * AnimationInstance myChase = {
-   *   .id = "MY_CHASE",
-   *   .stateMode = AnimationStateMode::LedCount,
-   *   .stateCount = 0,  // Will be LED count
-   *   .defaultDelay = 50,
-   *   .defaultColor = Color::Blue(),
-   *   .cb = [](Color* strip, Color color, uint16_t state, uint16_t count) {
-   *     for (uint16_t i = 0; i < count; i++) {
-   *       strip[i] = (i == state) ? color : Color::Black();
-   *     }
-   *     return true;
+   * class MyChase : public LumynLabs::Effect {
+   *  public:
+   *   MyChase(uint16_t width, uint16_t height) : _width(width) {}
+   *   void step() override { _head = (_head + 1) % (_width * 4); }
+   *   void draw(LumynLabs::Frame& frame) override {
+   *     for (int y = 0; y < frame.height; y++)
+   *       frame.at(_head / 4, y) = frame.color;
    *   }
+   *  private:
+   *   int _width;
+   *   int _head = 0;
    * };
    *
-   * // Register with animation manager
+   * const LumynLabs::AnimationInstance myChase = {
+   *   .id = "MY_CHASE",
+   *   .defaultDelay = 50,
+   *   .defaultColor = LumynLabs::Color(0, 0, 255),
+   *   .cycleTicks = 120,  // one sequence step: 2 s at the default delay
+   *   .flags = 0,
+   *   .make = LumynLabs::makeEffect<MyChase>,
+   * };
+   *
    * LumynLabs::registerAnimation(myChase);
    * @endcode
    */
-  using AnimationInstance = lumyn::internal::Animation::AnimationInstance;
+  using lumyn::led::AnimationInstance;
 
   /**
    * @brief No-op animation (turns LEDs off)
    */
-  static const AnimationInstance &NoAnimation = lumyn::internal::Animation::None;
+  extern const AnimationInstance &NoAnimation;
 
 } // namespace LumynLabs

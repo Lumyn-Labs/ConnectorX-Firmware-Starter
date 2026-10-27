@@ -1,9 +1,9 @@
 #pragma once
 
-// Oops! If you ended up here, your code (or your editor's autocomplete) used
-// a type from lumyn::internal. Those are Lumyn's own names, and they were
-// removed for 2027. The compiler error tells you the name to use instead.
-// It's the same type, so the fix is just the new name.
+// If a compiler error led you here, your code (or your editor's autocomplete)
+// used one of the lumyn::internal type names that were removed for 2027. The
+// error names the public type to use instead. It's the same type, so the fix
+// is just the new name.
 //
 // Lumyn's own libraries build with LUMYN_INTERNAL_NAMES, which keeps the old
 // names working inside them.
